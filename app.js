@@ -1,6 +1,6 @@
 (() => {
   const DATA = window.COURSE_DATA;
-  const STORAGE_KEY = 'ppm_spotlight6_module1_v1';
+  const STORAGE_KEY = 'ppm_spotlight6_module1_v2';
   const app = document.getElementById('app');
 
   const freshState = () => ({
