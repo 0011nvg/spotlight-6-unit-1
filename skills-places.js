@@ -112,4 +112,18 @@
       else s.skill = 'LANGUAGE';
     }
   }));
+
+  const extraTitles = {
+    family:['Missing Letters','Word Snap'],
+    face:['Spell the Clue','Opposite Match'],
+    whose:['Before a Noun / Alone','Fix the Robot'],
+    identity:['Natural or Awward?','Identity Word Snap'],
+    passport:['Nationality Spelling','Word Ending Lab'],
+    world:['Spell the Compass','Compass Snap'],
+    country:['Factfile Vocabulary','Earth Data Lab'],
+    final:['Round 1 — Family Signal','Round 2 — Face Scan']
+  };
+  data.missions.forEach(m => m.stages.forEach(s => {
+    if ((extraTitles[m.id] || []).includes(s.title)) s.extra = true;
+  }));
 })();
