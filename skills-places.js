@@ -117,7 +117,7 @@
     family:['Missing Letters','Word Snap'],
     face:['Spell the Clue','Opposite Match'],
     whose:['Before a Noun / Alone','Fix the Robot'],
-    identity:['Natural or Awward?','Identity Word Snap'],
+    identity:['Natural or Awkward?','Identity Word Snap'],
     passport:['Nationality Spelling','Word Ending Lab'],
     world:['Spell the Compass','Compass Snap'],
     country:['Factfile Vocabulary','Earth Data Lab'],
