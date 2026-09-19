@@ -1,0 +1,30 @@
+name: Package current lesson
+on:
+  push:
+    paths:
+      - '.github/workflows/package-site.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload GitHub Pages package
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotlight-6-unit-1-v7
+          path: |
+            index.html
+            404.html
+            .nojekyll
+            favicon.svg
+            *.js
+            *.css
+            *.md
+            *.txt
+            assets/
+          include-hidden-files: true
+          if-no-files-found: error
