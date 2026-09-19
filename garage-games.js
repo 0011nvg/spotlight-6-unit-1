@@ -55,7 +55,7 @@
       host.querySelectorAll('[data-cell]').forEach(b=>b.onclick=()=>{me.pick=+b.dataset.cell;save('map',me);G.openGame('map')});
       host.querySelector('[data-map-check]').onclick=()=>{
         const note=host.querySelector('[data-map-note]');
-        if(me.pick===target){note.innerHTML='✓ You reached <b>'+esc(r.label)+'</b>. Now retell the route aloud. <button class="ghost-btn small-btn" data-map-next>NEXT ROUTE →</button>';host.querySelector('[data-map-next]').onclick=()=>{me.r++;me.pick=null;if(me.r>=rounds.length){me.r=0;celebrate(host,'map','Four routes decoded. Now you can give directions, not just recognise them.')}save('map',me);G.openGame('map')};}
+        if(me.pick===target){note.innerHTML='✓ You reached <b>'+esc(r.label)+'</b>. Now retell the route aloud. <button class="ghost-btn small-btn" data-map-next>NEXT ROUTE →</button>';host.querySelector('[data-map-next]').onclick=()=>{me.r++;me.pick=null;if(me.r>=rounds.length){me.r=0;save('map',me);celebrate(host,'map','Four routes decoded. Now you can give directions, not just recognise them.');return}save('map',me);G.openGame('map')};}
         else note.textContent='↺ Not there yet. Check each compass move from S.';
       };
       host.querySelector('[data-map-hint]').onclick=()=>G.toast('First move: '+r.moves[0]+'.');
