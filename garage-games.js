@@ -107,7 +107,7 @@
     bind(host){
       const {script,qs,me}=host._radio, status=host.querySelector('[data-radio-status]');
       host.querySelector('[data-radio-play]').onclick=()=>G.speak(script,status);
-      host.querySelector('[data-radio-stop]').onclick=()=>{speechSynthesis?.cancel?.();status.textContent='Stopped. Replay when ready.'};
+      host.querySelector('[data-radio-stop]').onclick=()=>{window.speechSynthesis?.cancel?.();status.textContent='Stopped. Replay when ready.'};
       host.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{me.a[+b.dataset.pick.slice(1)]=b.dataset.value;save('radio',me);G.openGame('radio')});
       host.querySelector('[data-radio-check]').onclick=()=>{me.tried=true;save('radio',me);let n=0;qs.forEach((q,i)=>{const fb=host.querySelector('[data-fb="r'+i+'"]');const ok=me.a[i]===q[2];n+=ok;fb.textContent=ok?'✓':'↺ Listen again for this detail.';fb.className='gfeedback '+(ok?'ok':'no')});if(n===4)celebrate(host,'radio','Voice note decoded. Now tell your tutor one detail you remember.');else setTimeout(()=>G.openGame('radio'),650)};
       host.querySelector('[data-radio-transcript]')?.addEventListener('click',()=>{host.querySelector('[data-radio-script]').innerHTML='<div class="garage-transcript"><b>TRANSCRIPT</b><p>'+esc(script)+'</p><small>Language hunt: find one possessive, one place phrase and one family word.</small></div>'});
