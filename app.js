@@ -23,10 +23,10 @@
   }
   function activityKey(missionId, idx){ return `${missionId}:${idx}`; }
   function mission(){ return DATA.missions.find(m => m.id === state.currentMission) || DATA.missions[0]; }
-  function totalActivities(){ return DATA.missions.reduce((a,m)=>a+m.stages.length,0); }
-  function progressCount(){ return Object.keys(state.completed).filter(k=>!k.startsWith('wordlab:')).length; }
+  function totalActivities(){ return DATA.missions.reduce((a,m)=>a+m.stages.filter(s=>!s.extra).length,0); }
+  function progressCount(){ let count=0; DATA.missions.forEach(m=>m.stages.forEach((s,i)=>{ if(!s.extra && state.completed[activityKey(m.id,i)]) count++; })); return count; }
   function progressPct(){ return Math.round(progressCount()/totalActivities()*100); }
-  function missionCompleted(m){ return m.stages.every((_,i)=>state.completed[activityKey(m.id,i)]); }
+  function missionCompleted(m){ return m.stages.every((s,i)=>s.extra || state.completed[activityKey(m.id,i)]); }
   function toast(msg){
     document.querySelector('.toast')?.remove();
     const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2400);
