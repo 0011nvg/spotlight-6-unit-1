@@ -1,6 +1,6 @@
 (() => {
   const DATA = window.COURSE_DATA;
-  const MAIN_KEY = 'ppm_spotlight6_module1_v1';
+  const MAIN_KEY = 'ppm_spotlight6_module1_v2';
   const SKILL_KEY = 'ppm_spotlight6_skills_v2';
   if (!DATA) return;
 
