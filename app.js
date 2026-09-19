@@ -86,7 +86,7 @@
         <div class="map-grid">${DATA.missions.map((m,i)=>`
           <button class="mission-card ${m.id==='final'?'final':''}" data-open-mission="${m.id}">
             <span class="mission-no">${m.no}</span><div class="eyebrow">${i===7?'Final mission':'Mission'}</div>
-            <h3>${escapeHTML(m.title)}</h3><p>${escapeHTML(m.focus)}</p><span class="mission-meta">${m.stages.length} stages · ${escapeHTML(m.outcome)}</span>
+            <h3>${escapeHTML(m.title)}</h3><p>${escapeHTML(m.focus)}</p><span class="mission-meta">${m.stages.filter(s=>!s.extra).length} core${m.stages.some(s=>s.extra)?` + ${m.stages.filter(s=>s.extra).length} extra`:``} · ${escapeHTML(m.outcome)}</span>
             ${missionCompleted(m)?'<span class="mission-done">✓ FILE CLOSED</span>':''}
           </button>`).join('')}</div>
       </section>
