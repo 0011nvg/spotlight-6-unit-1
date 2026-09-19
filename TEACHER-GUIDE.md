@@ -89,3 +89,34 @@ Do not let Word Lab consume the whole lesson. If vocabulary is weak, add one sho
 ## Reset
 
 The integrated-skills revision uses a fresh local progress version so older saved answers do not attach to newly inserted stages. **NEW STUDENT** clears the active course data and additional writing drafts.
+
+
+## Side Quest Garage — teen game layer
+
+**Purpose:** add choice, novelty and teenage-friendly contexts without turning the course into a racing game or replacing the language progression.
+
+The automotive / tech theme is a motivational wrapper: model cars, motor-show displays, family bike trips, maps, cameras and transport technology. The course does **not** place 11–13-year-olds in adult driving situations.
+
+The seven optional quests are non-linear:
+
+- **Whose Gear?** — possessive adjectives, possessive pronouns and possessive ’s in a lost-property context.
+- **Map Run** — compass directions, route decoding and oral retelling.
+- **Crew Scan** — reading for specific information and textual evidence.
+- **Garage Radio** — listening for gist and detail; transcript unlocks after an attempt.
+- **Quick Shift** — sentence building and word order.
+- **Build a Ride** — meaningful choice → short writing → 30–45 second speaking pitch.
+- **Road Trip Boss** — final integrated speaking task with identity, family, possessions and location language.
+
+Quest keys are motivational progress only. There are no lives, penalties or mandatory speed. The optional 45-second timer in the Boss task supports fluency practice; it never determines success.
+
+### Suggested use in a 60-minute lesson
+
+A strong route is:
+
+**Core input → one controlled Core task → one Side Quest chosen for the learner’s current need → productive Core task → reflection.**
+
+Do not try to complete all seven quests in one lesson. They are a reusable practice layer across the whole unit.
+
+### Reset
+
+**NEW STUDENT** also clears Side Quest Garage answers, quest keys, drafts and timer state.
