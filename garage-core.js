@@ -8,7 +8,7 @@
   G.read = () => { try { return JSON.parse(localStorage.getItem(G.KEY) || '{}'); } catch { return {}; } };
   G.write = s => localStorage.setItem(G.KEY, JSON.stringify(s));
   G.patch = (k,v) => { const s=G.read(); s[k]=v; G.write(s); return s; };
-  G.complete = id => { const s=G.read(); s.done=s.done||{}; s.done[id]=true; G.write(s); G.renderHub(); G.toast('Quest key earned.'); };
+  G.complete = id => { const s=G.read(); s.done=s.done||{}; s.done[id]=true; G.write(s); G.toast('Quest key earned.'); };
   G.doneCount = () => Object.values(G.read().done||{}).filter(Boolean).length;
   G.shuffle = a => { const x=[...a]; for(let i=x.length-1;i;i--){ const j=Math.floor(Math.random()*(i+1)); [x[i],x[j]]=[x[j],x[i]]; } return x; };
   G.toast = msg => {
@@ -81,7 +81,7 @@
     const box=m.querySelector('[data-garage-content]'); box.innerHTML='<button class="garage-back" data-garage-hub>← QUEST BOARD</button><header class="garage-game-head"><span class="garage-big-icon">'+G.icons[id]+'</span><div><small>'+G.esc(g.skill)+'</small><h2>'+G.esc(g.title)+'</h2><p>'+G.esc(g.blurb)+'</p></div></header><div data-game-host></div>';
     g.render(box.querySelector('[data-game-host]')); G.bindInside(); g.bind?.(box.querySelector('[data-game-host]'));
   };
-  G.close = () => { const m=document.querySelector('.garage-modal'); if(!m)return; m.hidden=true; document.body.classList.remove('garage-open'); speechSynthesis?.cancel?.(); G.lastFocus?.focus?.(); };
+  G.close = () => { const m=document.querySelector('.garage-modal'); if(!m)return; m.hidden=true; document.body.classList.remove('garage-open'); window.speechSynthesis?.cancel?.(); G.lastFocus?.focus?.(); };
   G.bindInside = () => {
     document.querySelectorAll('[data-garage-hub]').forEach(b=>b.onclick=G.openHub);
     document.querySelectorAll('[data-garage-open]').forEach(b=>b.onclick=()=>G.openGame(b.dataset.garageOpen));
@@ -93,7 +93,7 @@
     new MutationObserver(()=>requestAnimationFrame(G.enhance)).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
     document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!document.querySelector('.garage-modal')?.hidden)G.close(); });
     document.addEventListener('click',e=>{
-      if(e.target.closest?.('[data-new]')) setTimeout(()=>{ if(!localStorage.getItem(G.MAIN_KEY)){localStorage.removeItem(G.KEY); speechSynthesis?.cancel?.();} },0);
+      if(e.target.closest?.('[data-new]')) setTimeout(()=>{ if(!localStorage.getItem(G.MAIN_KEY)){localStorage.removeItem(G.KEY); window.speechSynthesis?.cancel?.();} },0);
     },true);
   };
   setTimeout(G.init,0);
