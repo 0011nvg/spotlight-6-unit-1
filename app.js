@@ -54,6 +54,7 @@
         <span class="progress-label">${progressPct()}%</span>
       </div>
       <nav class="top-actions" aria-label="Course tools">
+        <a class="icon-btn" href="./module2.html" style="text-decoration:none;display:inline-flex;align-items:center;background:#FFD400;color:#111">MODULE 2 →</a>
         <button class="icon-btn" data-wordlab>WORD LAB</button>
         <button class="icon-btn" data-teacher>TEACHER</button>
         <button class="icon-btn danger-btn" data-new>NEW STUDENT</button>
@@ -64,6 +65,7 @@
   function renderHome(){
     const cont = progressCount() > 0;
     return `<div class="page">
+      <section aria-label="Module 2 now available" style="border:2px solid #111;padding:22px;margin-bottom:28px;background:#FFD400;display:flex;gap:20px;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><div class="eyebrow">NEW · SPOTLIGHT 6 MODULE 2a</div><h2 style="margin:8px 0;font-size:30px">HAPPY TIMES / PARTY BUREAU</h2><p style="margin:0">Приглашения, календарь, даты и часы — игры с подробными объяснениями на русском.</p></div><a class="solid-btn" style="text-decoration:none;display:inline-block" href="./module2.html">OPEN MODULE 2 →</a></section>
       <section class="hero">
         <div class="hero-copy">
           <div class="eyebrow">Interactive English course · A1+ → A2</div>
@@ -288,7 +290,7 @@
     document.querySelectorAll('[data-wordlab]').forEach(b=>b.onclick=()=>{state.view='wordlab';save();render();window.scrollTo(0,0)});
     document.querySelectorAll('[data-teacher]').forEach(b=>b.onclick=()=>{teacherOpen=true;render();});
     document.querySelectorAll('[data-close-teacher]').forEach(b=>b.onclick=()=>{teacherOpen=false;render();});
-    document.querySelectorAll('[data-new]').forEach(b=>b.onclick=()=>{if(confirm('Start a new student? This clears all answers and progress on this device.')){localStorage.removeItem(STORAGE_KEY);state=freshState();teacherOpen=false;render();window.scrollTo(0,0);toast('New student file ready.');}});
+    document.querySelectorAll('[data-new]').forEach(b=>b.onclick=()=>{if(confirm('Start a new student? This clears all answers and progress on this device.')){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem('ppm_spotlight6_module2a_v1');localStorage.removeItem('ppm_spotlight6_skills_v2');localStorage.removeItem('ppm_spotlight6_sidequests_v1');window.speechSynthesis?.cancel?.();state=freshState();teacherOpen=false;render();window.scrollTo(0,0);toast('New student file ready.');}});
     document.querySelector('[data-start]')?.addEventListener('click',()=>{state.view='mission'; if(progressCount()===0){state.currentMission='family';state.stageIndex=0;} save();render();window.scrollTo(0,0)});
     document.querySelectorAll('[data-open-mission]').forEach(b=>b.onclick=()=>{state.view='mission';state.currentMission=b.dataset.openMission;state.stageIndex=0;save();render();window.scrollTo(0,0)});
   }
@@ -385,3 +387,4 @@
 
   render();
 })();
+

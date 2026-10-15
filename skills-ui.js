@@ -102,7 +102,7 @@
   }
 
   document.addEventListener('click',e=>{
-    if(e.target.closest?.('[data-new]')){localStorage.removeItem(SKILL_KEY);window.speechSynthesis?.cancel?.();return;}
+    if(e.target.closest?.('[data-new]')){setTimeout(()=>{if(!localStorage.getItem(MAIN_KEY)){localStorage.removeItem(SKILL_KEY);window.speechSynthesis?.cancel?.();}},0);return;}
     if(e.target.closest?.('[data-reset-activity]')){
       const ctx=current(); if(!ctx) return;
       const store=readSkill(); delete store[ctx.key]; writeSkill(store); window.speechSynthesis?.cancel?.();
@@ -114,3 +114,4 @@
   if(window.speechSynthesis) speechSynthesis.onvoiceschanged=()=>{};
   requestAnimationFrame(enrich);
 })();
+

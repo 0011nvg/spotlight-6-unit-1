@@ -1,28 +1,13 @@
-PEOPLE, PLACES & ME — integrated-skills revision
+SPOTLIGHT 6 — MODULES 1 + 2a / HAPPY TIMES
 
-GitHub Pages root files include:
-- index.html
-- data.js
-- app.js
-- styles.css
-- skills-people1.js
-- skills-people2.js
-- skills-places.js
-- skills-ui.js
-- skills.css
-- TEACHER-GUIDE.md
-- LISTENING-SCRIPTS.md
-- VIDEO-SOURCES.md
-- assets/
+Открыть первый модуль: index.html
+Открыть новый раздел: module2.html
 
-The revision adds original reading, listening, writing and optional verified YouTube work without reproducing Spotlight textbook pages.
+Для GitHub Pages загрузите СОДЕРЖИМОЕ этого ZIP в корень репозитория.
+index.html должен находиться в корне, не внутри дополнительной папки.
+Сохраняйте папку assets и все JS/CSS-файлы. Сборка, сервер и API-ключи не нужны.
+Settings → Pages → Deploy from a branch → main → / (root).
 
-No backend or API key is required.
-
-
-Teen game layer files:
-- garage-core.js
-- garage-games.js
-- garage.css
-
-Side Quest Garage is optional and non-linear. It saves locally and is cleared by NEW STUDENT.
+После обновления используйте ссылку module2.html?v=8, чтобы браузер получил новую версию.
+Не удаляйте файлы первого модуля при добавлении следующих уроков.
+Новый файл TEACHER-GUIDE-MODULE2.md содержит маршрут и пояснения преподавателю.
