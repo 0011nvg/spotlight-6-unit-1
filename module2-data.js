@@ -27,6 +27,10 @@ window.PARTY_DATA = (() => {
   quizzes.monthRecall=months.map(([en,ru])=>q('Напиши по-английски: '+ru,en,'Первая буква: '+en[0]+'. Букв: '+en.length+'.',en+' — '+ru+'.'));
   quizzes.ordinalRecall=[4,8,10,11,13,14,15,16,17,18,19,23,24,25,26,27,28,29,30,31].map(n=>q(ordinal(n)+' → напиши словом',ordinalWords[n-1],'Первая буква: '+ordinalWords[n-1][0]+'. Числа 11–13 всегда заканчиваются на th.',ordinal(n)+' = '+ordinalWords[n-1]+'.'));
   quizzes.abbreviations=[['Sat','Saturday'],['Dec','December'],['Rd.','Road'],['St.','Street'],['Sun','Sunday'],['Sept','September']].map(([short,full])=>q(short+' → полная форма',full,'Первая буква: '+full[0]+'.',short+' = '+full+'.'));
+  quizzes.readA=[quizzes.inbox[0],quizzes.inbox[6],q('On what date is Janet’s party?','15 December','Найди Sat 15 Dec.','Sat = Saturday; Dec = December.',['15 December','4 September','12 June']),q('What time does Janet’s party start?','17:30','Найди время после at.','17:30 — половина шестого вечера.',['17:30','7:30','5:45 pm'])];
+  quizzes.readB=[quizzes.inbox[1],q('Whose house is the party at?',"Steve Johnson’s",'Ищи имя перед house.','The party is at Steve Johnson’s house.',["Steve Johnson’s","Janet’s","Claire’s"]),q('What date and time are on card B?','31 October at 6:00 pm','Найди строку после имени хозяина.','31 October; 6:00 pm — шесть вечера.',['31 October at 6:00 pm','15 December at 6:00 am','31 October at 8:00 pm'])];
+  quizzes.readC=[quizzes.inbox[2],quizzes.inbox[3],q('Who signs invitation C?','David and Shelley','Посмотри на два имени в конце.','David and Shelley Taylor приглашают отпраздновать выпуск Phillip.', ['David and Shelley','Tina and Janet','Claire and Sara'])];
+  quizzes.readD=[quizzes.inbox[4],quizzes.inbox[5],quizzes.inbox[7],q('When should Sara arrive?','5:45 pm','Найди время после at.','5:45 pm — 17:45, не раннее утро.',['5:45 am','5:45 pm','8:00 pm'])];
   const stages=[
     ['inbox','The invitation files','Разбираем приглашения','Кто приглашает, кого, куда и когда? Научись находить ответы, даже если не знаешь каждое слово.','inbox'],
     ['days','Seven days','Дни недели','Собери неделю, найди пары и расскажи о своём любимом дне.','days'],
@@ -36,7 +40,7 @@ window.PARTY_DATA = (() => {
     ['time','Clock lab','Который час?','Передвигай стрелки. Разберись, что происходит с past, to и следующим часом.','time'],
     ['preps','Three time gates','Предлоги at / on / in','Открой три «воротца» времени и научись выбирать нужное по смыслу.','preps'],
     ['radio','The voice message','Слушаем приглашение','Поймай главную мысль, затем дату, время и адрес.','radio'],
-    ['speaking','Birthday network','Говорим и узнаём','Узнай день рождения преподавателя и собери мини-календарь. Можно придумать персонажей.',''],
+    ['speaking','Birthday conversation','Говорим и узнаём','Спроси о дне рождения и ответь сам(а). Разговорные фразы, понятная модель и смена ролей.',''],
     ['writing','Invitation atelier','Пишем приглашение','Сначала сократи письмо Клэр, затем создай собственную карточку.',''],
     ['boss','Party ready?','Финальное дело','Проверь детали, исправь приглашение и договорись о встрече без опоры.','boss'],
     ['reflect','Your exit ticket','Что теперь получается?','Оцени свои навыки и выбери, к чему вернуться в следующий раз.','']
