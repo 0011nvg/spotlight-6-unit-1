@@ -1,7 +1,8 @@
 SPOTLIGHT 6 — MODULES 1 + 2a / HAPPY TIMES
 
-Открыть первый модуль: index.html
-Открыть новый раздел: module2.html
+Главная страница (сразу Module 2a): index.html
+Открыть первый модуль: module1.html
+Прямая ссылка на новый раздел: module2.html
 
 Для GitHub Pages загрузите СОДЕРЖИМОЕ этого ZIP в корень репозитория.
 index.html должен находиться в корне, не внутри дополнительной папки.
