@@ -1,14 +1,19 @@
-SPOTLIGHT 6 — MODULES 1 + 2a / HAPPY TIMES
+SPOTLIGHT 6 — MODULE 1 + MODULE 2a–2d
 
-Главная страница (сразу Module 2a): index.html
-Открыть первый модуль: module1.html
-Прямая ссылка на новый раздел: module2.html
+Главная страница: index.html — действующий 2a с навигацией в новые разделы.
+Module 1: module1.html
+Прямая ссылка 2a: module2.html
+2b My place: module2-world.html#b
+2c My neighbourhood: module2-world.html#c
+2d Famous Streets: module2-world.html#d
 
-Для GitHub Pages загрузите СОДЕРЖИМОЕ этого ZIP в корень репозитория.
-index.html должен находиться в корне, не внутри дополнительной папки.
-Сохраняйте папку assets и все JS/CSS-файлы. Сборка, сервер и API-ключи не нужны.
+Для GitHub Pages загрузите СОДЕРЖИМОЕ ZIP в корень репозитория, сохраняя папку assets и все JS/CSS-файлы.
+Сборка, backend, аккаунты и API-ключи не требуются. Файл index.html находится в корне.
 Settings → Pages → Deploy from a branch → main → / (root).
 
-После обновления используйте ссылку module2.html?v=8, чтобы браузер получил новую версию.
-Не удаляйте файлы первого модуля при добавлении следующих уроков.
-Новый файл TEACHER-GUIDE-MODULE2.md содержит маршрут и пояснения преподавателю.
+Новые страницы используют module2-world-data.js, module2-world-art.js, module2-world.js, module2-world.css.
+Не удаляйте существующие файлы первого модуля и 2a.
+Прогресс сохраняется локально; Reset All очищает весь курс.
+
+TEACHER-GUIDE-MODULE2BCD.md — маршрут новых уроков и ограничения проверки.
+SOURCES-MODULE2BCD.md — источники фактов и примечания к аудио/графике.

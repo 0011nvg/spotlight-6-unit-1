@@ -26,3 +26,14 @@ Progress and answers are stored locally in the browser with `localStorage`. **NE
 ## Content note
 
 The course follows the syllabus and vocabulary focus of Spotlight 6 Module 1, but uses original contexts, characters, tasks and texts rather than reproducing textbook pages.
+
+
+## Module 2 continuation
+
+The main entry `index.html` includes links to all four sections. The existing Module 1 and 2a are retained.
+
+- 2b My place: `module2-world.html#b`
+- 2c My neighbourhood: `module2-world.html#c`
+- 2d Famous Streets: `module2-world.html#d`
+
+The continuation is buildless HTML/CSS/JS with local SVG diagrams, browser-local progress and an optional system-voice listening route with tutor fallback. See `TEACHER-GUIDE-MODULE2BCD.md` and `SOURCES-MODULE2BCD.md`.
