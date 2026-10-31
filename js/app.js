@@ -335,7 +335,9 @@
   /* ---------- Audio library (файлы хранятся только в этом браузере) ---------- */
   const TRACKS = [['01', '1.0 Ex. 2 · David (Story behind the photo)'], ['02', '1.1 Ex. 2 · What’s your personality?'], ['03', '1.1 Ex. 7 · Antonia and Jess'], ['04', '1.2 Ex. 2–4 · Interview: Reuben and Daniella'],
     ['05', '1.2 Ex. 6 · Listening skill'], ['06', '1.2 Ex. 7 · Other students'], ['07', '1.2 Ex. 11 · Pronunciation'], ['08', '1.4 Ex. 2 · Nice to meet you'], ['09', '1.5 Ex. 2–3 · Pets in the UK'],
-    ['10', 'Unit 2 · 2.0'], ['11', 'Unit 2 · 2.1 Ex. 4'], ['12', 'Unit 2 · 2.1 Ex. 7'], ['13', 'Unit 2 · 2.1 Pronunciation'], ['14', 'Unit 2 · 2.1 Pronunciation'], ['15', 'Unit 2 · 2.3 Reading']];
+    ['10', '2.0 Ex. 1–2 · Relationships'], ['11', '2.1 Ex. 4–5 · Radio show'], ['12', '2.1 Ex. 7 · Listening skill'], ['13', '2.1 Ex. 12 · Pronunciation'], ['14', '2.1 Ex. 13 · Pronunciation'], ['15', '2.3 Ex. 4 · Modern families'],
+    ['16', '2.4 Ex. 2 · Mia’s talk'], ['17', '2.5 Ex. 2 · Bed in summer'], ['18', '2.5 Ex. 4 · At the sea-side'], ['19', '3.0 Ex. 2 · Anastasia'], ['20', '3.1 Ex. 8 · Pronunciation'], ['21', '3.1 Ex. 9–10 · Amelie’s message'],
+    ['22', '3.2 Ex. 2 · A different life'], ['23', '3.4 Ex. 2–3 · My ideal home'], ['24', '3.5 Ex. 2–3 · Lazy teenagers?']];
   function AudioPage() {
     const list = h('ul', { class: 'students' });
     const paint = () => AudioLib.list().then(have => { list.innerHTML = ''; TRACKS.forEach(([t, l]) => list.append(h('li', { class: have.includes(t) ? 'on' : null }, h('span', { class: 'av' }, t), h('b', null, l), have.includes(t) ? h('span', { class: 'pill mastered' }, 'ready') : h('span', { class: 'pill' }, 'нет файла')))); });
