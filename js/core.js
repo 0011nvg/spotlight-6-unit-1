@@ -151,9 +151,9 @@
       document.body.appendChild(ov); document.addEventListener('keydown', onKey); ok.focus();
     });
   }
-  function promptBox(title, value) {
+  function promptBox(title, value, type) {
     return new Promise(res => {
-      const inp = h('input', { class: 'inp', value: value || '', 'aria-label': title, maxlength: 40 });
+      const inp = h('input', { class: 'inp', type: type || 'text', inputmode: type === 'password' ? 'numeric' : null, autocomplete: 'off', value: value || '', 'aria-label': title, maxlength: 40 });
       const close = v => { ov.remove(); res(v); };
       const ov = h('div', { class: 'modal-ov', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
         h('div', { class: 'modal' }, h('h3', null, title), inp,
@@ -165,7 +165,23 @@
   function download(name, text, type) { const b = new Blob([text], { type: type || 'application/json' }); const a = h('a', { href: URL.createObjectURL(b), download: name }); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 
   /* ---------- Tutor mode (display only) ---------- */
-  const Tutor = { on() { return !!LS.get('tutor', false); }, set(v) { LS.set('tutor', !!v); document.documentElement.classList.toggle('tutor', !!v); } };
+  /* Код преподавателя: на сайте хранится только SHA-256 хеш кода. Сменить код — заменить TUTOR_HASH. */
+  const TUTOR_HASH = 'cd91c5876cd288087223b6e1b844a78dfeb0d2298d56814e3388934274fb9277';
+  const SS = { get: k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch (e) { } } };
+  async function sha256(t) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+  const Tutor = {
+    unlocked() { return SS.get('tutorOK') === TUTOR_HASH; },
+    on() { return this.unlocked() && !!LS.get('tutor', false); },
+    set(v) { v = !!v && this.unlocked(); LS.set('tutor', v); document.documentElement.classList.toggle('tutor', v); },
+    async unlock() {
+      if (this.unlocked()) return true;
+      const code = await promptBox('Код преподавателя', '', 'password');
+      if (code == null) return false;
+      if (await sha256(code.trim()) === TUTOR_HASH) { SS.set('tutorOK', TUTOR_HASH); return true; }
+      toast('Неверный код'); return false;
+    },
+    lock() { SS.set('tutorOK', null); this.set(false); }
+  };
 
   /* ---------- Content index ---------- */
   function allItems(lessonId) { const L = LESSONS[lessonId]; const out = []; L.sections.forEach(s => s.items.forEach(it => out.push(Object.assign({ _section: s.id }, it)))); return out; }

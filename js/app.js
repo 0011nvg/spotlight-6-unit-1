@@ -25,7 +25,7 @@
     const p = Profiles.ensure();
     const nav = [['#/', 'Lessons'], ['#/vocab', 'Vocabulary Lab'], ['#/revision', 'Revision'], ['#/progress', 'My Progress'], ['#/audio', 'Audio'], ['#/tutor', 'Tutor Mode']];
     const cur = location.hash || '#/';
-    const tbtn = h('button', { class: 'tmode', 'aria-pressed': String(Tutor.on()), onclick: () => { Tutor.set(!Tutor.on()); tbtn.setAttribute('aria-pressed', String(Tutor.on())); toast(Tutor.on() ? 'Tutor mode ON — видны заметки, ключи и оценки' : 'Tutor mode OFF'); } }, h('span', { class: 'dot', 'aria-hidden': 'true' }), 'Tutor');
+    const tbtn = h('button', { class: 'tmode', 'aria-pressed': String(Tutor.on()), onclick: async () => { if (!Tutor.on() && !(await Tutor.unlock())) return; Tutor.set(!Tutor.on()); tbtn.setAttribute('aria-pressed', String(Tutor.on())); toast(Tutor.on() ? 'Tutor mode ON — видны заметки, ключи и оценки' : 'Tutor mode OFF'); } }, h('span', { class: 'dot', 'aria-hidden': 'true' }), 'Tutor');
     const menuBtn = h('button', { class: 'menu-btn', 'aria-label': 'Меню', 'aria-expanded': 'false', onclick: () => { const o = navEl.classList.toggle('open'); menuBtn.setAttribute('aria-expanded', String(o)); } }, '☰');
     const navEl = h('nav', { class: 'nav', 'aria-label': 'Главное меню' }, nav.map(([href, l]) => h('a', { href, class: (cur === href || (href !== '#/' && cur.startsWith(href))) ? 'on' : null, onclick: () => navEl.classList.remove('open') }, l)));
     const hd = document.getElementById('hdr'); hd.innerHTML = '';
@@ -300,8 +300,8 @@
     const asks = []; UNIT.lessons.forEach(id => allItems(id).forEach(it => { const e = d.ex[it.id]; if (e && e.ask) asks.push([id, it, e.ask]); }));
     const audio = []; UNIT.lessons.forEach(id => allItems(id).forEach(it => { if (it.audio) audio.push([id, it]); }));
     return h('div', { class: 'page' }, h('div', { class: 'eyebrow' }, 'Tutor Mode'), h('h1', null, 'Tutor ', h('span', { class: 'hl-blue' }, 'desk')),
-      h('div', { class: 'tcard' }, h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: Tutor.on() || null, onchange: e => { Tutor.set(e.target.checked); header(); } }), h('span', null, 'Режим преподавателя: заметки, ключи («Показать ключ»), чек-листы, комментарии')),
-        h('p', { class: 'muted small' }, 'Это режим отображения, а не защита: на общем устройстве ученик тоже может его включить.'),
+      h('div', { class: 'tcard' }, h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: Tutor.on() || null, onchange: async e => { if (e.target.checked && !(await Tutor.unlock())) { e.target.checked = false; return; } Tutor.set(e.target.checked); header(); } }), h('span', null, 'Режим преподавателя: заметки, ключи («Показать ключ»), чек-листы, комментарии')),
+        h('p', { class: 'muted small' }, 'Режим открывается по коду преподавателя и остаётся открытым до закрытия вкладки.'), h('button', { class: 'btn ghost sm', onclick: () => { Tutor.lock(); toast('Режим преподавателя закрыт'); location.hash = '#/'; } }, '🔒 Закрыть режим преподавателя'),
         h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: Board.on() || null, onchange: e => { Board.set(e.target.checked); header(); } }), h('span', null, 'Board mode: крупный шрифт для интерактивной доски, без XP, звёзд и Кекса')),
         h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => Find() }, '⌕ Найти упражнение'), h('span', { class: 'muted small' }, 'или клавиша «/» на любой странице: «13 4» = с. 13, упр. 4'))),
       h('div', { class: 'sec-h' }, h('h2', null, 'Students on this device')),
@@ -360,7 +360,7 @@
       case 'vocab': view = VocabLab(parts[1], parts[2]); break;
       case 'revision': view = Revision(); break;
       case 'progress': view = Progress(); break;
-      case 'tutor': view = TutorPage(); break;
+      case 'tutor': if (!Tutor.unlocked()) { Tutor.unlock().then(ok => { if (ok) route(); else if (location.hash === '#/tutor') location.hash = '#/'; }); view = h('div', { class: 'page' }, h('h1', null, 'Tutor Mode'), h('p', { class: 'muted' }, 'Введите код преподавателя.')); break; } view = TutorPage(); break;
       case 'audio': view = AudioPage(); break;
       case 'coverage': view = Coverage(); break;
       default: view = NotFound();
