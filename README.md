@@ -1,39 +1,44 @@
-# PEOPLE, PLACES & ME — Spotlight 6 Module 1
+# Interactive English Studio — Panoramic A2
 
-Static interactive course for 1:1 English tutoring, designed for GitHub Pages.
+Платформа для индивидуальных занятий (1 ученик + 1 преподаватель) по учебнику **Panoramic A2** (Oxford). Тот же движок, что у сайта Panoramic B1: автопроверка, ключи, Vocabulary Lab с интервальным повторением, XP и Кекс, Board mode, профили учеников.
 
-## Deploy to GitHub Pages
+Готово: **Unit 1 «Identity»** целиком — Student Book pp.11–20, Grammar Practice p.133, Workbook pp.156–161 (≈ 110 заданий, 58 слов в словаре, авторские задания в формате ОГЭ).
 
-1. Upload the whole folder contents to a GitHub repository.
-2. In GitHub: **Settings → Pages → Deploy from a branch**.
-3. Choose `main` and `/ (root)`.
-4. Open `https://USERNAME.github.io/REPOSITORY/`.
+## Формат «лист ответов»
+Тексты, статьи и предложения учебника на сайт **не копируются**: ученик работает по книге, а на каждой карточке указаны страница и номер упражнения. Сайт даёт поля ответов (ввод, выбор, соотнесение), проверку и ключ. Так репозиторий можно держать публичным, не выкладывая содержание книги.
 
-All internal assets use relative paths, so the project works from a repository subpath. No build step, backend, database or API key is required.
+## Аудио
+Аудиофайлы учебника **не хранятся в репозитории**. Раздел **Audio** (в меню): нажмите «Выбрать файлы» и отметьте mp3 учебника — они сохранятся в памяти этого браузера (IndexedDB) и подключатся к заданиям сами. На другом устройстве файлы нужно выбрать один раз заново.
+Номер трека берётся из имени файла: `…audio_track_04.mp3`, `04.mp3`.
 
-## Local preview
+| Трек | Задание |
+|---|---|
+| 01 | 1.0 Ex. 2 · David |
+| 02 | 1.1 Ex. 2 |
+| 03 | 1.1 Ex. 7 |
+| 04 | 1.2 Ex. 2–4 |
+| 05 | 1.2 Ex. 6 |
+| 06 | 1.2 Ex. 7 |
+| 07 | 1.2 Ex. 11 |
+| 08 | 1.4 Ex. 2 |
+| 09 | 1.5 Ex. 2–3 |
+| 10–15 | Unit 2 (2.0, 2.1, 2.3) — для следующего модуля |
 
-```bash
-python3 -m http.server 8000
+Задания без надёжного ключа по аудио (1.0 Ex. 2, 1.5 Ex. 2–3) проверяет преподаватель: ✓/✗ у каждого ответа. Подкаст Workbook (треки 89–92) в комплект не входил.
+
+## Публикация
+Settings → Pages → Source: *Deploy from a branch* → `main` / `(root)`. Сборка не нужна.
+
+## Структура
+```
+index.html          оболочка
+js/data-unit1.js    Unit 1: уроки, листы ответов, ключи
+js/data-vocab.js    словарь Unit 1 (примеры и переводы авторские)
+js/data-visuals.js  панорамы уроков
+js/audiolib.js      локальная аудиотека (IndexedDB)
+js/core.js, exercises.js, vocab.js, game.js, keks.js, app.js, pics.js — движок (как в B1)
+css/, assets/       дизайн, шрифты (OFL), 3D-объекты Fluent Emoji (MIT), Кекс
 ```
 
-Then open `http://localhost:8000`.
-
-## Student state
-
-Progress and answers are stored locally in the browser with `localStorage`. **NEW STUDENT** clears the course state after confirmation.
-
-## Content note
-
-The course follows the syllabus and vocabulary focus of Spotlight 6 Module 1, but uses original contexts, characters, tasks and texts rather than reproducing textbook pages.
-
-
-## Module 2 continuation
-
-The main entry `index.html` includes links to all four sections. The existing Module 1 and 2a are retained.
-
-- 2b My place: `module2-world.html#b`
-- 2c My neighbourhood: `module2-world.html#c`
-- 2d Famous Streets: `module2-world.html#d`
-
-The continuation is buildless HTML/CSS/JS with local SVG diagrams, browser-local progress and an optional system-voice listening route with tutor fallback. See `TEACHER-GUIDE-MODULE2BCD.md` and `SOURCES-MODULE2BCD.md`.
+## Как добавить Unit 2
+Создайте `js/data-unit2.js` по образцу `data-unit1.js` (`BOOK.units.push({...})` + `LESSONS[...]`), подключите в `index.html` после `data-unit1.js`, слова добавьте в `VOCAB` с `lesson: '<id урока>'`. Аудио: `audio: AUDIO('10')`.
