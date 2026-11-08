@@ -7,7 +7,11 @@
 
   /* ---------- Audio player (real <audio>, or honest placeholder) ---------- */
   function AudioPlayer(audio) {
-    if (audio && !audio.file && !audio.note && audio.track && window.AudioLib) {
+    if (audio && /^[0-9]+[–-][0-9]+$/.test(audio.track || '')) {
+      const [start, end] = audio.track.split(/[–-]/).map(Number);
+      return h('div', { class: 'audio-group' }, Array.from({length: Math.max(0, Math.min(10, end - start + 1))}, (_, i) => AudioPlayer({ track: String(start + i).padStart(2, '0') })));
+    }
+    if (audio && !audio.file && audio.track && window.AudioLib) {
       const slot = h('div', { class: 'audio-slot' }, h('div', { class: 'audio-ph', role: 'note' }, h('span', { class: 'audio-ph-ic', 'aria-hidden': 'true' }, '♪'), h('span', { class: 'muted' }, 'Track ' + audio.track + ' …')));
       const paint = () => AudioLib.get(audio.track).then(url => {
         slot.innerHTML = '';
@@ -36,15 +40,23 @@
     const time = h('span', { class: 'ap-time' }, '0:00');
     const vol = h('input', { type: 'range', min: 0, max: 100, value: 100, class: 'ap-vol', 'aria-label': 'Volume' });
     const fmt = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '0:00';
-    play.onclick = () => { if (el.paused) el.play(); else el.pause(); };
-    replay.onclick = () => { el.currentTime = 0; el.play(); };
+    const start = () => {
+      document.querySelectorAll('audio').forEach(other => { if (other !== el) other.pause(); });
+      el.play().catch(() => toast('Не удалось запустить аудио. Попробуйте ещё раз.', 'bad'));
+    };
+    play.onclick = () => { if (el.paused) start(); else el.pause(); };
+    replay.onclick = () => { el.currentTime = 0; start(); };
+    el.onended = () => { play.textContent = '▶'; play.setAttribute('aria-label', 'Play'); };
+    const speed = h('select', { class: 'ap-speed', 'aria-label': 'Скорость воспроизведения' }, [.5, .75, 1, 1.25, 1.5].map(rate => h('option', { value: rate, selected: rate === Number(Core.LS.get('audioSpeed', 1)) || null }, rate + '×')));
+    el.playbackRate = Number(speed.value) || 1;
+    speed.onchange = () => { el.playbackRate = Number(speed.value); Core.LS.set('audioSpeed', el.playbackRate); };
     el.onplay = () => { play.textContent = '❚❚'; play.setAttribute('aria-label', 'Pause'); };
     el.onpause = () => { play.textContent = '▶'; play.setAttribute('aria-label', 'Play'); };
     el.ontimeupdate = () => { if (el.duration) bar.value = Math.round(el.currentTime / el.duration * 1000); time.textContent = fmt(el.currentTime) + ' / ' + fmt(el.duration); };
     el.onerror = () => { wrap.replaceWith(h('div', { class: 'audio-ph bad' }, 'Не удалось воспроизвести трек ' + audio.track + '. Подключите файл заново (My Progress → Аудио).')); };
     bar.oninput = () => { if (el.duration) el.currentTime = bar.value / 1000 * el.duration; };
     vol.oninput = () => { el.volume = vol.value / 100; };
-    const wrap = h('div', { class: 'audio' }, el, play, replay, h('div', { class: 'ap-mid' }, bar, time), h('label', { class: 'ap-vlab' }, h('span', { 'aria-hidden': 'true' }, '🔊'), vol), h('span', { class: 'ap-track' }, 'Track ' + audio.track));
+    const wrap = h('div', { class: 'audio' }, el, play, replay, h('div', { class: 'ap-mid' }, bar, time), h('label', { class: 'ap-vlab' }, h('span', { 'aria-hidden': 'true' }, '🔊'), vol), h('span', { class: 'ap-track' }, 'Track ' + audio.track), h('label', { class: 'ap-speed-label' }, 'Скорость', speed));
     return wrap;
   }
 
@@ -79,23 +91,34 @@
     const explBox = h('div', { class: 'ex-expl', hidden: true });
     const add = (label, cls, fn, title) => { const b = h('button', { class: 'btn ' + cls, onclick: fn, title: title || null }, label); tools.appendChild(b); return b; };
 
+    if (it.type === 'writing') add('Принять работу', 'ghost tutor-only', () => { if (!Core.Tutor.on()) return; const entry = Store.ex(it.id); if (!entry.state || !String(entry.state).trim()) { toast('Сначала напишите ответ'); return; } entry.tutorScored = true; Store.markDone(it.id); paintDone(); document.dispatchEvent(new CustomEvent('progress-changed')); toast('Работа проверена преподавателем'); });
     if (api.check) add('Check Answers', 'primary', () => { const r = api.check(); show(r); });
     if (api.retry) add('Try Again', 'ghost', () => { api.retry(); fb.textContent = ''; fb.className = 'ex-fb'; });
     if (it.hint) add('Need a Hint?', 'ghost', () => { hintBox.hidden = !hintBox.hidden; hintBox.textContent = '💡 ' + it.hint; });
-    if (it.explanation) add('Show Explanation', 'ghost', () => { explBox.hidden = !explBox.hidden; explBox.textContent = it.explanation; });
+    if (it.explanation) add('Show Explanation', 'ghost explanation-btn', () => { if (!Core.Tutor.on() && !(Store.ex(it.id).attempts || []).length) { toast('Сначала проверьте свой ответ'); return; } explBox.hidden = !explBox.hidden; explBox.textContent = it.explanation; });
     if (api.reset) add('Reset Exercise', 'ghost subtle', async () => { if (await Core.confirmBox('Сбросить упражнение?', 'Ответы этого упражнения будут очищены. Результаты прошлых попыток останутся в истории.', 'Сбросить')) { api.reset(); fb.textContent = ''; fb.className = 'ex-fb'; Store.saveState(it.id, null); } });
-    if (api.key) add('Показать ключ', 'ghost tutor-only', () => api.key(), 'Только в режиме преподавателя');
-    if (api.done) add(api.doneLabel || 'Mark as done', 'ghost', () => { const was = !!Store.ex(it.id).done; api.done(); paintDone(); const now = !!Store.ex(it.id).done; const xp = now && G ? G.exerciseDone(it, !was) : 0; toast(now ? 'Отмечено как выполненное' + (xp ? ' · +' + xp + ' XP' : '') : 'Отмечено как выполненное'); });
+    const keyPanel = h('section', { class: 'key-preview tutor-only', hidden: true, 'aria-label': 'Правильные ответы для преподавателя' });
+    if (api.key) add('Показать ключ', 'ghost tutor-only', e => {
+      if (!Core.Tutor.on()) return;
+      if (!keyPanel.hidden) { keyPanel.hidden = true; keyPanel.replaceChildren(); return; }
+      const preview = it.type === 'listen' ? MAP[it.inner.type](Object.assign({}, it, it.inner)) : MAP[it.type](it);
+      if (preview.key) preview.key();
+      keyPanel.replaceChildren(h('b', null, 'Ключ · ответы ученика не изменяются'), preview.el);
+      keyPanel.querySelectorAll('input,select,textarea,button').forEach(el => { el.disabled = true; });
+      keyPanel.hidden = false;
+    }, 'Только в режиме преподавателя');
+    if (api.done) add(api.doneLabel || 'Mark as done', 'ghost', () => { const was = !!Store.ex(it.id).done; api.done(); paintDone(); const now = !!Store.ex(it.id).done; const xp = now && G ? G.exerciseDone(it, !was) : 0; document.dispatchEvent(new CustomEvent('progress-changed')); toast(now ? 'Отмечено как выполненное' + (xp ? ' · +' + xp + ' XP' : '') : 'Отмечено как выполненное'); });
 
     function show(r) {
       if (!r) return;
       const pct = r.max ? Math.round(r.score / r.max * 100) : 0;
-      const msg = pct === 100 ? 'Excellent! Everything is correct.' : pct >= 70 ? 'Good job! Correct the red answers and press Check again.' : 'Keep going! Use “Need a Hint?” and try again.';
+      const msg = it.type === 'writing' ? 'Проверен только объём. Содержание и язык проверяет преподаватель.' : pct === 100 ? 'Excellent! Everything is correct.' : pct >= 70 ? 'Good job! Correct the red answers and press Check again.' : (it.hint ? 'Keep going! Use “Need a Hint?” and try again.' : 'Keep going! Read the task again and try once more.');
       fb.className = 'ex-fb show ' + (pct === 100 ? 'ok' : pct >= 70 ? 'mid' : 'low');
       fb.innerHTML = '';
       const prevBest = Store.ex(it.id).best;
-      Store.record(it.id, r.score, r.max);
-      const g = G ? G.exerciseChecked(it, r, prevBest) : null;
+      Store.record(it.id, r.score, r.max, {tutorScored: !!r.tutorScored});
+      if (it.type === 'writing') { Store.ex(it.id).done = false; Store.save(); }
+      const g = G && it.type !== 'writing' ? G.exerciseChecked(it, r, prevBest) : null;
       const praise = g && g.fixed ? 'Fixed! Mistakes turned into 100%.' : msg;
       fb.append(...[h('span', { class: 'score' }, r.score + ' / ' + r.max), h('span', { class: 'pct' }, pct + '%'), h('span', null, praise), r.note ? h('span', { class: 'muted' }, ' ' + r.note) : null,
         g && (g.xp || starable) ? h('span', { class: 'reward' }, starable ? h('span', { class: 'rw-stars' }, Stars(g.stars)) : null, g.xp ? h('b', { class: 'rw-xp' }, '+' + g.xp + ' XP') : null) : null].filter(Boolean));   // append(null) печатал бы «null»
@@ -108,24 +131,36 @@
 
     const tcomment = h('textarea', { class: 'inp tcomment', rows: 2, placeholder: 'Комментарий преподавателя…', 'aria-label': 'Комментарий преподавателя' });
     const ex = Store.ex(it.id); tcomment.value = ex.tcomment || '';
-    tcomment.addEventListener('change', () => { Store.ex(it.id).tcomment = tcomment.value; Store.save(); });
+    tcomment.addEventListener('input', () => { Store.ex(it.id).tcomment = tcomment.value; Store.save(); });
 
     const ask = h('details', { class: 'askbox' }, h('summary', null, '✋ Ask your tutor'),
-      h('textarea', { class: 'inp', rows: 2, placeholder: 'Напиши вопрос преподавателю — он появится в Tutor Mode', 'aria-label': 'Вопрос преподавателю', onchange: e => { Store.ex(it.id).ask = e.target.value; Store.save(); } }));
+      h('textarea', { class: 'inp', rows: 2, placeholder: 'Напиши вопрос преподавателю — он появится в Tutor Mode', 'aria-label': 'Вопрос преподавателю', oninput: e => { Store.ex(it.id).ask = e.target.value; Store.save(); } }));
     ask.querySelector('textarea').value = ex.ask || '';
 
-    const follow = it.followUp ? h('div', { class: 'followup' }, h('div', { class: 'fu-title' }, 'Tutor follow-up'), h('ul', null, it.followUp.map(q => h('li', null, q)))) : null;
+    const follow = it.followUp ? h('div', { class: 'followup tutor-only' }, h('div', { class: 'fu-title' }, 'Tutor follow-up'), h('ul', null, it.followUp.map(q => h('li', null, q)))) : null;
     const extra = it.extra ? ExtraChallenge(it) : null;
 
     const links = it.links ? h('div', { class: 'plinks' }, h('span', null, 'PRACTICE'), it.links.map(([label, lesson, ex]) => h('a', { href: '#/lesson/' + lesson + (ex ? '/' + ex : '') }, label + ' ›'))) : null;
     const tx = it.type !== 'listen' && it.audio && it.audio.transcript ? Transcript(it.audio) : null;
-    const card = h('article', { class: 'ex', id: 'ex-' + it.id, 'data-id': it.id, 'data-type': it.type }, head, it.type !== 'listen' && it.audio ? AudioPlayer(it.audio) : null, body, tx, links, hintBox, explBox, tools, fb, follow, extra,
+    const advice = h('details', {class:'tutor-only teaching-guide'}, h('summary',null,'Для индивидуального занятия'), h('p',null, it.type === 'listen' ? 'Перед аудио дайте 20 секунд на вопросы. Первое прослушивание — общий смысл, второе — детали. Попросите объяснить выбор и повторите только трудный фрагмент.' : it.type === 'writing' ? 'Сначала обсудите план и смысл. Затем проверьте be / have got, порядок слов и связки. Предложите ученику самому исправить две ошибки.' : it.type === 'discuss' ? 'Дайте время на ключевые слова. Попросите развить ответ: Why? Can you give an example? What about your friend? Исправляйте после реплики, сохраняя ход разговора.' : 'Сначала ученик объясняет выбор. При ошибке попросите найти подсказку в предложении или тексте. Показывайте ключ после самостоятельной попытки.'));
+    const material = window.LessonContent ? LessonContent.render(it) : null;
+    const followAnswer = it.studentPrompt ? h('textarea',{class:'inp',rows:2,'aria-label':it.studentPrompt,placeholder:'Your notes…',oninput:e=>{Store.ex(it.id).followAnswer=e.target.value;Store.save();}}) : null;
+    if (followAnswer) followAnswer.value = Store.ex(it.id).followAnswer || '';
+    const studentPrompt = followAnswer ? h('label',{class:'student-follow'},h('b',null,it.studentPrompt),followAnswer) : null;
+    const priorAnswer = it.referenceAnswer && Store.ex(it.referenceAnswer).state;
+    const referenceWork = it.referenceAnswer ? h('section', {class:'student-work'}, h('h3',null,'Твой текст'), priorAnswer ? h('p',null,String(priorAnswer)) : h('p',null,'Сначала напиши свой текст в предыдущем письменном задании.')) : null;
+    const missingMaterial = (window.MODULE1_CONTEXT_IDS || []).includes(it.id) && !it.privateBlocks ? h('aside', {class:'material-missing'}, h('b',null,'Подключите материал Module 1'), h('p',null,'Оригинальный текст и изображения для этого задания находятся в вашем локальном комплекте. Пока можно работать по своей книге.'),h('a',{class:'btn ghost sm',href:'#/materials'},'Подключить комплект')) : null;
+    const card = h('article', { class: 'ex', id: 'ex-' + it.id, 'data-id': it.id, 'data-type': it.type }, head, material, referenceWork, missingMaterial, it.type !== 'listen' && it.audio ? AudioPlayer(it.audio) : null, body, studentPrompt, tx, links, hintBox, explBox, tools, keyPanel, fb, advice, follow, extra,
       h('div', { class: 'ex-foot' }, ask, h('div', { class: 'tutor-only tc-wrap' }, tcomment)));
 
+    if (material) {
+      material.querySelectorAll('[data-answer-row]').forEach(figure => { const row = body.querySelectorAll('.gline')[Number(figure.dataset.answerRow)]; if (row) { row.classList.add('image-gap-row'); row.prepend(figure); } });
+      if (!material.children.length) material.remove();
+    }
     card.addEventListener('focusin', () => { if (card._seen) return; card._seen = true; document.dispatchEvent(new CustomEvent('exercise-focus', { detail: { id: it.id, type: it.type === 'listen' ? (it.inner || {}).type || 'listen' : it.type, listen: it.type === 'listen', hint: !!it.hint } })); });
-    function paintDone() { const e = Store.ex(it.id); card.classList.toggle('is-done', !!e.done); }
+    function paintDone() { const e = Store.ex(it.id); card.classList.toggle('is-done', !!e.done); card.classList.toggle('has-attempt', !!(e.attempts && e.attempts.length)); }
     paintDone();
-    card._show = show;
+    card._show = show; card._dispose = () => { if (api.dispose) api.dispose(); if (material && material._dispose) material._dispose(); };
     return card;
   }
 
@@ -137,18 +172,19 @@
   }
 
   /* ---------- tutor ✓/✗ marker for keyless items ---------- */
-  function Marker() {
+  function Marker(id, index) {
     let v = null;
     const yes = h('button', { class: 'mk yes', 'aria-pressed': 'false', title: 'Верно', 'aria-label': 'Верно' }, '✓');
     const no = h('button', { class: 'mk no', 'aria-pressed': 'false', title: 'Неверно', 'aria-label': 'Неверно' }, '✗');
-    const set = x => { v = x; yes.setAttribute('aria-pressed', String(x === true)); no.setAttribute('aria-pressed', String(x === false)); };
-    yes.onclick = () => set(v === true ? null : true); no.onclick = () => set(v === false ? null : false);
-    const el = h('span', { class: 'marker' }, yes, no);
+    const set = (x, persist = true) => { v = x; yes.setAttribute('aria-pressed', String(x === true)); no.setAttribute('aria-pressed', String(x === false)); if (persist && id) { const e = Store.ex(id); (e.tmarks || (e.tmarks = {}))[index] = x; Store.save(); } };
+    const saved = id && Store.ex(id).tmarks; if (saved && index in saved) set(saved[index], false);
+    yes.onclick = () => { if (Core.Tutor.on()) set(v === true ? null : true); }; no.onclick = () => { if (Core.Tutor.on()) set(v === false ? null : false); };
+    const el = h('span', { class: 'marker tutor-only' }, yes, no);
     return { el, get: () => v, set };
   }
 
   /* ---------- Save helper ---------- */
-  function autosave(it, getState) { let t; return () => { clearTimeout(t); t = setTimeout(() => Store.saveState(it.id, getState()), 250); }; }
+  function autosave(it, getState) { return () => Store.saveState(it.id, getState()); }
 
   /* =============== GAPS (typed, select, free, example, keyless) =============== */
   function Gaps(it, inner) {
@@ -168,7 +204,7 @@
       }
       const longest = seg.w || Math.max(...((seg.a || ['xxxxxxxxxx']).map(x => x.length)), seg.open ? 24 : 8);
       const el = h('input', { class: 'gap' + (seg.open ? ' free' : ''), type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': (seg.open ? 'Your answer ' : 'Gap ') + (gaps.length + 1), placeholder: seg.ph || null, style: { width: Math.min(longest + 3, 40) + 'ch' } });
-      const g = { el, seg, kind: seg.open ? 'free' : 'text', mk: keyless && !seg.open ? Marker() : null };
+      const g = { el, seg, kind: seg.open ? 'free' : 'text', mk: keyless && !seg.open ? Marker(it.id, gaps.length) : null };
       el.addEventListener('focus', () => { lastFocus = g; });
       el.addEventListener('input', () => { el.classList.remove('ok', 'bad', 'close'); paintBank(); save(); });
       gaps.push(g);
@@ -176,7 +212,7 @@
       if (showNum) gn++;
       return h('span', { class: 'gapwrap' }, showNum ? h('sup', { class: 'gn' }, seg.n || gn) : null, el, g.mk ? g.mk.el : null);
     }
-    const paras = src.paras.map((p, pi) => h('p', { class: 'gline' + (src.numbered ? ' numbered' : '') }, src.numbered ? h('b', { class: 'ln' }, (src.numStart != null ? src.numStart + pi : pi + 1) + ' ') : null, h('span', { class: 'gl-body' }, p.map(mkSeg))));
+    const paras = src.paras.map((p, pi) => h((it.privateBlocks || []).some(b=>Number.isInteger(b.answerRow)) ? 'div' : 'p', { class: 'gline' + (src.numbered ? ' numbered' : '') }, src.numbered ? h('b', { class: 'ln' }, (src.numStart != null ? src.numStart + pi : pi + 1) + ' ') : null, h('span', { class: 'gl-body' }, p.map(mkSeg))));
     function paintBank() {
       if (!bankWrap) return;
       const used = gaps.filter(g => g.kind === 'text').map(g => norm(g.el.value));
@@ -198,6 +234,7 @@
     const wrap = h('div', null, intro, bankWrap, body);
     const graded = () => gaps.filter(g => g.kind !== 'free');
     function okFor(g, groups) {
+      if (it.maxAnswerWords && (g.el.value.match(/[\p{L}\p{N}]+(?:['’][\p{L}]+)*/gu) || []).length > it.maxAnswerWords) return false;
       if (g.kind === 'sel') return g.el.value !== '' && [].concat(g.seg.a).includes(g.el.value);
       if (g.seg.group) { const peers = groups[g.seg.group]; const val = norm(g.el.value); return matches(g.el.value, g.seg.a, g.seg.strict ? { strict: true } : null) && peers.filter(p => norm(p.el.value) === val).length === 1; }
       return matches(g.el.value, g.seg.a, g.seg.strict ? { strict: true } : null);
@@ -213,12 +250,13 @@
         g.el.setAttribute('aria-invalid', String(!ok));
       });
       const close = gaps.filter(g => g.el.classList.contains('close')).length;
-      return { score, max: graded().length, note: close ? 'Orange = almost right, check the spelling.' : '' };
+      return { score, max: graded().length, note: it.maxAnswerWords ? 'Use a maximum of ' + it.maxAnswerWords + ' words for each answer.' : close ? 'Orange = almost right, check the spelling.' : '' };
     }
     return {
       el: wrap,
-      check: keyless ? null : evalGaps,
-      retry: keyless ? null : () => { graded().forEach(g => { if (!g.ok) { g.el.value = ''; g.el.classList.remove('bad', 'close'); } }); paintBank(); },
+      check: keyless || !graded().length ? null : evalGaps,
+      done: !keyless && !graded().length ? () => Store.markDone(it.id) : null,
+      retry: keyless || !graded().length ? null : () => { graded().forEach(g => { if (!g.ok) { g.el.value = ''; g.el.classList.remove('bad', 'close'); } }); paintBank(); save(); },
       reset: () => { gaps.forEach(g => { g.el.value = ''; g.el.classList.remove('ok', 'bad', 'close'); g.mk && g.mk.set(null); }); paintBank(); },
       key: keyless ? () => toast('Это задание проверяет преподаватель: отметьте ✓ или ✗') : () => { graded().forEach(g => { g.el.value = [].concat(g.seg.a)[0]; }); gaps.filter(g => g.kind === 'free' && g.seg.key).forEach(g => { g.el.value = g.seg.key; }); evalGaps(); paintBank(); },
       setState: st => { if (Array.isArray(st)) gaps.forEach((g, i) => { g.el.value = st[i] || ''; }); paintBank(); },
@@ -237,7 +275,7 @@
         src.source ? h('p', { class: 'src' }, src.source) : null);
     }
     const list = h('div', { class: 'mcq' + (src.compact ? ' compact' : '') }, src.questions.map((q, qi) => {
-      const rec = { q, sel: null, btns: [], mk: keyless ? Marker() : null, n: q.n || qi + 1 };
+      const rec = { q, sel: null, btns: [], mk: keyless ? Marker(it.id, qi) : null, n: q.n || qi + 1 };
       const opts = h('div', { class: 'opts', role: 'radiogroup', 'aria-label': q.q || ('Question ' + rec.n) }, q.options.map((o, oi) => {
         const b = h('button', { class: 'opt', role: 'radio', 'aria-checked': 'false', onclick: () => { rec.sel = oi; paint(rec); save(); } }, o);
         rec.btns.push(b); return b;
@@ -252,7 +290,7 @@
     return {
       el: h('div', null, passage, list),
       check: keyless ? null : () => { let s = 0; qs.forEach(r => { r.btns.forEach(b => b.classList.remove('ok', 'bad')); if (r.sel === r.q.a) { s++; r.btns[r.sel].classList.add('ok'); } else if (r.sel != null) r.btns[r.sel].classList.add('bad'); r.ok = r.sel === r.q.a; }); return { score: s, max: qs.length }; },
-      retry: keyless ? null : () => qs.forEach(r => { if (!r.ok) { r.sel = null; paint(r); } }),
+      retry: keyless ? null : () => { qs.forEach(r => { if (!r.ok) { r.sel = null; paint(r); } }); save(); },
       reset: () => qs.forEach(r => { r.sel = null; paint(r); r.mk && r.mk.set(null); }),
       key: keyless ? () => toast('Это задание проверяет преподаватель: отметьте ✓ или ✗') : () => qs.forEach(r => { r.sel = r.q.a; paint(r); r.btns[r.sel].classList.add('ok'); }),
       setState: s => { if (Array.isArray(s)) qs.forEach((r, i) => { r.sel = s[i] == null ? null : s[i]; paint(r); }); },
@@ -265,7 +303,7 @@
     const src = inner || it; const rows = []; const save = autosave(it, () => rows.map(r => r.ta.value));
     const el = h('ol', { class: 'openq', start: src.start || null }, src.questions.map((q, qi) => {
       const ta = h('textarea', { class: 'inp', rows: src.rows || 2, 'aria-label': q || ('Answer ' + (qi + 1)) }); ta.addEventListener('input', save);
-      const mk = Marker(); const model = src.key && src.key[qi] ? h('div', { class: 'model', hidden: true }, h('b', null, 'Key: '), src.key[qi]) : null;
+      const mk = Marker(it.id, qi); const model = src.key && src.key[qi] ? h('div', { class: 'model', hidden: true }, h('b', null, 'Key: '), src.key[qi]) : null;
       rows.push({ ta, mk, model });
       return h('li', null, h('div', { class: 'mq-q' }, h('span', { html: md(q || '') }), mk.el), ta, model);
     }));
@@ -331,7 +369,7 @@
     return {
       el,
       check: () => { paint(); let s = 0; const want = new Set(it.answers); const opt = new Set(it.optional || []); btns.forEach((b, i) => { if (opt.has(i)) return; if (on.has(i) && want.has(i)) { s++; b.classList.add('ok'); } else if (on.has(i)) { s--; b.classList.add('bad'); } else if (want.has(i)) b.classList.add('miss'); }); return { score: Math.max(0, s), max: it.answers.length, note: 'Лишний вариант = −1.' }; },
-      retry: () => { const want = new Set(it.answers); on = new Set([...on].filter(i => want.has(i))); paint(); },
+      retry: () => { const want = new Set(it.answers); on = new Set([...on].filter(i => want.has(i))); paint(); save(); },
       reset: () => { on.clear(); paint(); }, key: () => { on = new Set(it.answers); paint(); },
       setState: st => { if (Array.isArray(st)) { on = new Set(st); paint(); } }
     };
@@ -357,7 +395,7 @@
   function Transcript(a) { return h('details', { class: 'transcript tx' }, h('summary', null, 'Transcript · track ' + a.track), h('div', { class: 'tx-body', html: a.transcript })); }
   /* =============== LISTEN shell =============== */
   function Listen(it) {
-    const innerApi = ({ mcq: MCQ, gaps: Gaps, open: Open, multi: (x, y) => Multi(Object.assign({}, x, y)), tapfind: (x, y) => TapFind(Object.assign({}, x, y)) })[it.inner.type](it, it.inner);
+    const innerApi = ({ match: (x,y)=>Match(Object.assign({},x,y)), mcq: MCQ, gaps: Gaps, open: Open, multi: (x, y) => Multi(Object.assign({}, x, y)), tapfind: (x, y) => TapFind(Object.assign({}, x, y)) })[it.inner.type](it, it.inner);
     const parts = [];
     if (it.think) parts.push(h('p', { class: 'think' }, h('b', null, 'THINK '), it.think));
     if (it.skill) parts.push(h('aside', { class: 'skillbox' }, h('div', { class: 'sk-t' }, it.skill.title), h('p', null, it.skill.text)));
@@ -425,7 +463,7 @@
     return {
       el,
       check: () => { let sc = 0; sels.forEach(s => { const ok = s.value === s._a; s.classList.toggle('ok', ok); s.classList.toggle('bad', !ok); s._ok = ok; if (ok) sc++; }); return { score: sc, max: sels.length }; },
-      retry: () => sels.forEach(s => { if (!s._ok) { s.value = ''; s.classList.remove('bad'); } }),
+      retry: () => { sels.forEach(s => { if (!s._ok) { s.value = ''; s.classList.remove('bad'); } }); save(); },
       reset: () => sels.forEach(s => { s.value = ''; s.classList.remove('ok', 'bad'); }),
       key: () => sels.forEach(s => { s.value = s._a; }),
       setState: st => { if (Array.isArray(st)) sels.forEach((s, i) => { s.value = st[i] || ''; }); }
@@ -436,12 +474,12 @@
   function Match(it) {
     const sels = []; const save = autosave(it, () => sels.map(s => s.value));
     const el = h('div', { class: 'match' },
-      h('ul', { class: 'match-r' }, it.right.map(r => h('li', null, r))),
-      h('div', { class: 'match-l' }, it.left.map((l, i) => { const s = h('select', { class: 'inp sel', 'aria-label': l, onchange: () => { s.classList.remove('ok', 'bad'); save(); } }, h('option', { value: '' }, '—'), it.rightShort.map((r, ri) => h('option', { value: ri }, r))); s._a = it.answers[i]; sels.push(s); return h('label', { class: 'match-row' }, h('span', null, l), s); })));
+      h('ul', { class: 'match-r' }, it.right.map((r, i) => h('li', { draggable: true, class: 'match-token', ondragstart: e => e.dataTransfer.setData('text/plain', String(i)) }, r))),
+      h('div', { class: 'match-l' }, it.left.map((l, i) => { const s = h('select', { class: 'inp sel', 'aria-label': l, onchange: () => { s.classList.remove('ok', 'bad'); save(); } }, h('option', { value: '' }, '—'), it.rightShort.map((r, ri) => h('option', { value: ri }, r))); s._a = it.answers[i]; sels.push(s); return h('label', { class: 'match-row', ondragover: e => e.preventDefault(), ondrop: e => { e.preventDefault(); const raw = e.dataTransfer.getData('text/plain'); if (!/^\d+$/.test(raw)) return; const index = Number(raw); if (index >= it.rightShort.length) return; s.value = String(index); s.dispatchEvent(new Event('change')); } }, h('span', null, l), s); })));
     return {
       el,
       check: () => { let sc = 0; sels.forEach(s => { const ok = s.value !== '' && +s.value === s._a; s._ok = ok; s.classList.toggle('ok', ok); s.classList.toggle('bad', !ok); if (ok) sc++; }); return { score: sc, max: sels.length }; },
-      retry: () => sels.forEach(s => { if (!s._ok) { s.value = ''; s.classList.remove('bad'); } }),
+      retry: () => { sels.forEach(s => { if (!s._ok) { s.value = ''; s.classList.remove('bad'); } }); save(); },
       reset: () => sels.forEach(s => { s.value = ''; s.classList.remove('ok', 'bad'); }),
       key: () => sels.forEach(s => { s.value = s._a; }),
       setState: st => { if (Array.isArray(st)) sels.forEach((s, i) => { s.value = st[i] == null ? '' : st[i]; }); }
@@ -489,15 +527,16 @@
   function Discuss(it) {
     const parts = []; const fields = []; let chosen = new Set();
     const save = () => Store.saveState(it.id, { f: fields.map(f => f.value), c: [...chosen] });
-    if (it.model) parts.push(h('div', { class: 'bubble' }, '“' + it.model + '”'));
+    if (it.model) parts.push(h('div', { class: 'bubble tutor-only' }, '“' + it.model + '”'));
     if (it.choose) {
       const chips = it.choose.from.map(p => h('button', { class: 'pchip', 'aria-pressed': 'false', onclick: e => { if (chosen.has(p)) chosen.delete(p); else if (chosen.size < it.choose.pick) chosen.add(p); else { toast('Можно выбрать только ' + it.choose.pick); return; } paintC(); save(); } }, p));
       var paintC = () => chips.forEach((c, i) => { const on = chosen.has(it.choose.from[i]); c.classList.toggle('on', on); c.setAttribute('aria-pressed', String(on)); });
       parts.push(h('div', { class: 'pchips' }, h('div', { class: 'muted small' }, 'Choose ' + it.choose.pick + ':'), chips));
     }
+    if (!it.prompts) { const notes = h('textarea', {class:'inp', rows:3, 'aria-label':'Speaking notes', placeholder:'Key words / notes…'}); fields.push(notes); notes.addEventListener('input',save); parts.push(notes); }
     if (it.prompts) parts.push(h('ul', { class: 'prompts' }, it.prompts.map((p, i) => {
       const f = it.answerFields || it.prompts.length > 0 ? h('textarea', { class: 'inp', rows: 2, placeholder: 'Notes / key words (optional)…', 'aria-label': p }) : null;
-      if (f) { fields.push(f); f.addEventListener('input', () => { clearTimeout(f._t); f._t = setTimeout(save, 300); }); }
+      if (f) { fields.push(f); f.addEventListener('input', save); }
       return h('li', null, h('span', { class: 'pq' }, p), f);
     })));
     return {
@@ -530,6 +569,7 @@
     }
     paint();
     return {
+      dispose: stop,
       el: h('div', { class: 'iv' }, h('div', { class: 'iv-top' }, nEl, ring), qEl, h('div', { class: 'row' }, it.read ? null : prev, prepB, start, it.read ? null : next), chk),
       done: () => { const tot = ticks.length * it.checklist.length; const sc = ticks.flat().filter(Boolean).length; Store.record(it.id, sc, tot, { tutorScored: true }); toast('Сохранено: ' + sc + ' / ' + tot + ' пунктов чек-листа'); }, doneLabel: 'Save tutor checklist',
       reset: () => { ticks = it.questions.map(() => it.checklist.map(() => false)); go(0); },
@@ -539,7 +579,9 @@
 
   /* =============== WRITING (OGE email) =============== */
   function Writing(it) {
-    const ta = h('textarea', { class: 'inp write', rows: 12, 'aria-label': 'Your email', placeholder: 'Dear Sam,\n\nThanks for your email…' });
+    const email = /\bemail\b/i.test(it.instruction || '') || it.genre === 'email';
+    const ta = h('textarea', { class: 'inp write', rows: 10, 'aria-label': 'Your writing', placeholder: email ? 'Dear …,\n\n' : 'Write your answer here…' });
+    if (it.draftFrom && !Store.ex(it.id).state) { const draft = Store.ex(it.draftFrom).state; if (typeof draft === 'string') ta.value = draft; }
     const wc = h('div', { class: 'wc' });
     const allChecks = [
       ['Объём ' + it.min + '–' + it.max + ' слов', t => { const n = words(t); return n >= (it.min || 1) && n <= (it.max || 9999); }],
@@ -551,15 +593,15 @@
       ['Есть абзацы (минимум 4 блока)', t => t.trim().split(/\n\s*\n/).length >= 4]
     ];
     if (it.min) allChecks[0][0] = 'Объём ' + it.min + '–' + it.max + ' слов';
-    const checks = it.checks === false ? (it.min ? [allChecks[0]] : []) : allChecks;
+    const checks = it.checks === false || !email ? (it.min ? [allChecks[0]] : []) : allChecks;
     const list = h('ul', { class: 'fchecks' });
-    function words(t) { return (t.match(/[A-Za-z]+(?:['’-][A-Za-z]+)*/g) || []).length; }
+    function words(t) { return (t.match(/[\p{L}]+(?:['’-][\p{L}]+)*/gu) || []).length; }
     function paint() { const t = ta.value; const n = words(t); wc.textContent = n + ' words'; wc.className = 'wc ' + (n === 0 || !it.min ? '' : n < it.min ? 'low' : n > it.max ? 'high' : 'ok'); list.innerHTML = ''; checks.forEach(([l, f]) => list.appendChild(h('li', { class: f(t) ? 'ok' : '' }, (f(t) ? '✓ ' : '○ ') + l))); }
-    ta.addEventListener('input', () => { paint(); clearTimeout(ta._t); ta._t = setTimeout(() => Store.saveState(it.id, ta.value), 300); });
+    ta.addEventListener('input', () => { paint(); Store.saveState(it.id, ta.value); });
     const crit = !it.criteria ? null : h('div', { class: 'crit tutor-only' }, h('div', { class: 'muted small' }, it.critTitle || 'Оценка преподавателя по критериям ФИПИ:'), it.criteria.map((c, ci) => h('label', { class: 'crit-r' }, h('span', null, c), h('select', { class: 'inp sel', onchange: e => { const ex = Store.ex(it.id); ex.crit = ex.crit || []; ex.crit[ci] = e.target.value; Store.save(); } }, ['—', 'не выполнено', 'частично', 'полностью'].map(o => h('option', null, o))))));
     paint();
     return {
-      el: h('div', { class: 'writing' }, it.letter ? h('blockquote', { class: 'letter', html: Array.isArray(it.letter) ? it.letter.map(l => '<p>' + md(l) + '</p>').join('') : md(it.letter) }) : null, it.task ? h('p', { class: 'task' }, it.task) : null, it.bullets ? h('ul', { class: 'wbul' }, it.bullets.map(b => h('li', null, b))) : null, ta, h('div', { class: 'wbar' }, wc, h('span', { class: 'muted small' }, 'Сайт проверяет только формальные признаки. Содержание и язык оценивает преподаватель.')), list, it.criteria ? crit : null, it.model ? h('details', { class: 'tutor-only model-ans' }, h('summary', null, 'Model answer'), h('div', { html: it.model })) : null),
+      el: h('div', { class: 'writing' }, it.plan ? h('aside', { class: 'writing-plan' }, h('b', null, 'Writing plan'), h('ol', null, it.plan.map(step => h('li', null, step)))) : null, it.letter ? h('blockquote', { class: 'letter', html: Array.isArray(it.letter) ? it.letter.map(l => '<p>' + md(l) + '</p>').join('') : md(it.letter) }) : null, it.task ? h('p', { class: 'task' }, it.task) : null, it.bullets ? h('ul', { class: 'wbul' }, it.bullets.map(b => h('li', null, b))) : null, ta, h('div', { class: 'wbar' }, wc, h('span', { class: 'muted small' }, 'Сайт проверяет только формальные признаки. Содержание и язык оценивает преподаватель.')), list, it.criteria ? crit : null, it.model ? h('details', { class: 'tutor-only model-ans' }, h('summary', null, 'Model answer'), h('div', { html: it.model })) : null),
       check: checks.length ? () => { const t = ta.value; const sc = checks.filter(([, f]) => f(t)).length; return { score: sc, max: checks.length, note: 'Формальные признаки письма.' }; } : null,
       done: checks.length ? null : () => Store.markDone(it.id), doneLabel: 'Done — show to tutor',
       reset: () => { ta.value = ''; paint(); },
@@ -587,13 +629,18 @@
     // keyless tutor-scored items get a dedicated button
     const card = Card(it, api.el, api);
     if (api.tutorSave) {
-      const b = h('button', { class: 'btn primary', onclick: () => { const r = api.tutorSave(); if (r) card._show(r); } }, 'Save tutor marks');
+      const b = h('button', { class: 'btn primary tutor-only', onclick: () => { if (!Core.Tutor.on()) return; const r = api.tutorSave(); if (r) { r.tutorScored = true; card._show(r); } } }, 'Save tutor marks');
       card.querySelector('.ex-tools').prepend(b);
       card.querySelector('.ex-tools').prepend(h('span', { class: 'keyless' }, 'Ключ не опубликован на странице — преподаватель отмечает ✓/✗.'));
     }
-    const st = Store.ex(it.id).state; if (st != null && api.setState) { try { api.setState(st); } catch (e) { /* stale state */ } }
+    const stored = Store.ex(it.id);
+    if (it.stateVersion && stored.stateVersion !== it.stateVersion) {
+      if (stored.state != null) (stored.previousStates || (stored.previousStates = [])).push({ version: stored.stateVersion || 1, state: stored.state });
+      stored.state = null; stored.stateVersion = it.stateVersion; Store.save();
+    }
+    const st = stored.state; if (st != null && api.setState) { try { api.setState(st); } catch (e) { /* stale state */ } }
     return card;
   }
 
-  window.Exercises = { render, AudioPlayer };
+  window.Exercises = { render, AudioPlayer, register(type, factory) { if (MAP[type]) throw new Error('Exercise type already registered: ' + type); MAP[type] = factory; } };
 })();

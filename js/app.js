@@ -23,9 +23,10 @@
   /* ---------- header ---------- */
   function header() {
     const p = Profiles.ensure();
-    const nav = [['#/', 'Lessons'], ['#/vocab', 'Vocabulary Lab'], ['#/revision', 'Revision'], ['#/progress', 'My Progress'], ['#/audio', 'Audio'], ['#/tutor', 'Tutor Mode']];
+    const nav = [['#/', 'Lessons'], ['#/vocab', 'Vocabulary Lab'], ['#/revision', 'Revision'], ['#/progress', 'My Progress'], ['#/materials', 'Материалы'], ['#/audio', 'Audio'], ['#/tutor', 'Tutor Mode']];
     const cur = location.hash || '#/';
-    const tbtn = h('button', { class: 'tmode', 'aria-pressed': String(Tutor.on()), onclick: async () => { if (!Tutor.on() && !(await Tutor.unlock())) return; Tutor.set(!Tutor.on()); tbtn.setAttribute('aria-pressed', String(Tutor.on())); toast(Tutor.on() ? 'Tutor mode ON — видны заметки, ключи и оценки' : 'Tutor mode OFF'); } }, h('span', { class: 'dot', 'aria-hidden': 'true' }), 'Tutor');
+    const modeLabel = h('span', null, Tutor.on() ? 'Teacher Mode' : 'Student Mode');
+    const tbtn = h('button', { class: 'tmode', 'aria-pressed': String(Tutor.on()), onclick: async () => { const anchor = document.querySelector('.workspace-active'); const before = anchor && anchor.getBoundingClientRect().top; if (!Tutor.on() && !(await Tutor.unlock())) return; Tutor.set(!Tutor.on()); tbtn.setAttribute('aria-pressed', String(Tutor.on())); modeLabel.textContent = Tutor.on() ? 'Teacher Mode' : 'Student Mode'; if (anchor) window.scrollTo(0, window.scrollY + anchor.getBoundingClientRect().top - before); toast(Tutor.on() ? 'Tutor mode ON — видны заметки, ключи и оценки' : 'Tutor mode OFF'); } }, h('span', { class: 'dot', 'aria-hidden': 'true' }), modeLabel);
     const menuBtn = h('button', { class: 'menu-btn', 'aria-label': 'Меню', 'aria-expanded': 'false', onclick: () => { const o = navEl.classList.toggle('open'); menuBtn.setAttribute('aria-expanded', String(o)); } }, '☰');
     const navEl = h('nav', { class: 'nav', 'aria-label': 'Главное меню' }, nav.map(([href, l]) => h('a', { href, class: (cur === href || (href !== '#/' && cur.startsWith(href))) ? 'on' : null, onclick: () => navEl.classList.remove('open') }, l)));
     const hd = document.getElementById('hdr'); hd.innerHTML = '';
@@ -85,7 +86,7 @@
         h('div', { class: 'pl-top' }, h('span', { class: 'av lg', 'aria-hidden': 'true' }, (p.name[0] || 'S').toUpperCase()), h('div', { class: 'pl-n' }, h('small', null, p.name), h('b', null, 'Level ' + L.i + ' · ' + L.name))),
         h('div', { class: 'xpbar' }, h('i', { style: { width: L.pct + '%' } })),
         h('div', { class: 'pl-meta' }, h('span', null, L.xp + ' XP'), h('span', null, sk ? '🔥 ' + sk + ' дн. подряд' : '🔥 начни серию сегодня'), h('span', null, '🏅 ' + bd.filter(b => b.got).length + '/' + bd.length))),
-      curId ? h('a', { class: 'tcard2 next with-pic', href: '#/lesson/' + curId + (nx ? '/' + nx.id : '') },
+      curId ? h('a', { class: 'tcard2 next with-pic', href: lastId === curId ? last : '#/lesson/' + curId + (nx ? '/' + nx.id : '') },
         h('small', null, last ? 'Продолжить' : 'Начать'), h('b', null, lname(curId) + ' · ' + LESSONS[curId].title),
         h('span', null, nx ? 'Дальше: ' + (nx.source === 'added' ? nx.title || 'Warm-up' : 'Ex. ' + nx.num + ' · p.' + nx.page) : 'Остались только Extra-задания'),
         h('div', { class: 'lprog' }, h('i', { style: { width: cp.pct + '%' } })), h('span', { class: 'go', 'aria-hidden': 'true' }, '→'), tcPic(((window.VISUALS || {}).lessons || {})[curId] ? VISUALS.lessons[curId].items[0] : '📘')) : null,
@@ -100,7 +101,7 @@
         h('div', { class: 'hero-txt' },
           h('div', { class: 'eyebrow' }, 'One student · One tutor · ' + BOOK.level),
           h('h1', null, 'Learn it. ', h('span', { class: 'hl-pink' }, 'Say it.'), ' ', h('span', { class: 'hl-blue' }, 'Keep it.')),
-          h('p', { class: 'lead' }, 'Все упражнения учебника — интерактивно, с проверкой. Словарный тренажёр с интервальным повторением, миссии уроков и подготовка к ОГЭ по теме урока.'),
+          h('p', { class: 'lead' }, 'Три модуля английского: читай, слушай, общайся и закрепляй новое. Подключи свои материалы — тексты и иллюстрации появятся рядом с заданиями.'),
           h('div', { class: 'row' }, last ? h('a', { class: 'btn primary lg', href: last }, 'Continue lesson →') : h('a', { class: 'btn primary lg', href: '#/lesson/u1-opener' }, 'Start: Unit 1 →'),
             h('a', { class: 'btn ghost lg', href: '#/lesson/u1-opener' }, 'Unit 1'), h('a', { class: 'btn ghost lg', href: '#/vocab' }, 'Vocabulary Lab'))),
         h('figure', { class: 'hero-art' }, h('div', { class: 'blob b1' }), h('div', { class: 'blob b2' }), h('img', { src: 'assets/keks.webp', alt: 'Кекс — кот-талисман платформы', width: 720, height: 630 }),
@@ -119,7 +120,7 @@
   const stat = (n, l, c, e) => h('div', { class: 'stat ' + c }, h('b', null, n), h('span', null, l), e && window.Pics ? Pics.img(e, { cls: 'st-pic', size: 64 }) : null);
 
   function UnitCard(u) {
-    return h('article', { class: 'unit-card' },
+    return h('article', { class: 'unit-card', 'data-unit': u.id },
       h('div', { class: 'unit-no' }, u.num),
       h('div', { class: 'unit-body' },
         window.Pics ? Pics.unitCover(u) : null,
@@ -137,7 +138,7 @@
 
   function Lesson(id, exId) {
     const L = LESSONS[id]; if (!L) return NotFound();
-    Store.setLast('#/lesson/' + id);
+    Store.setLast('#/lesson/' + id + (exId ? '/' + exId : ''));
     const p = lessonProgress(id);
     let coreOnly = false;
     const words = lessonWords(id);
@@ -168,7 +169,12 @@
       msBox.append(h('div', { class: 'ms-h' }, h('b', null, 'Lesson missions'), s2.max ? h('span', { class: 'ms-stars' }, '★ ' + s2.got + ' / ' + s2.max) : null),
         h('div', { class: 'ms-row' }, ms.map(m => h('div', { class: 'ms' + (m.done ? ' done' : '') }, h('span', { class: 'ms-ic', 'aria-hidden': 'true' }, m.done ? '✓' : m.icon), h('div', null, h('b', null, m.title), h('small', null, m.desc), h('div', { class: 'ms-bar' }, h('i', { style: { width: Math.min(100, Math.round(m.cur / Math.max(1, m.goal) * 100)) + '%' } }))), h('span', { class: 'ms-n' }, m.cur + '/' + m.goal))))); };
     paintMs();
-    document.addEventListener('progress-changed', onProg); currentCleanup = () => document.removeEventListener('progress-changed', onProg);
+    const source = SourceReader(L);
+    if (L.unit === 'u1') source.el.classList.add('tutor-only');
+    body.addEventListener('workspace-selection', e => { if (e.detail.page) source.show(e.detail.page); });
+    const workspace = LessonWorkspace(L, body, exId);
+    if (workspace.resume) exId = workspace.resume;
+    document.addEventListener('progress-changed', onProg); currentCleanup = () => { source.destroy(); workspace.destroy(); document.removeEventListener('progress-changed', onProg); };
     const hpano = window.Pics ? Pics.lessonPano(id) : null;
     const page = h('div', { class: 'page lesson acc-' + L.accent },
       h('a', { class: 'back', href: '#/' }, '← All lessons'),
@@ -176,12 +182,12 @@
         h('div', { class: 'lh-code' }, L.code),
         h('div', null, h('div', { class: 'eyebrow' }, ulab(unitOf(id)) + ' · ' + L.kicker + ' · p.' + L.pages + (L.sdg ? ' · SDG ' + L.sdg : '')), h('h1', null, L.title), h('p', { class: 'lead' }, L.goal),
           h('div', { class: 'lh-meta' }, h('span', { class: 'chip' }, '⏱ ' + L.time), L.split ? h('span', { class: 'chip tutor-only' }, L.split) : null)), hpano),
-      msBox,
+      workspace.panel, L.unit === 'u1' ? h('aside', {class:'lesson-keks'}, h('img',{src:'assets/keks-face.webp',alt:'Кекс — ваш помощник',width:100,height:100}),h('div',null,h('b',null,'Ready? Let’s go!'),h('p',null,'Read, listen and give it a try. You’ve got this!'))) : null, L.unit === 'u1' ? h('details', {class:'lesson-goals game'}, h('summary',null,'Цели и прогресс урока'), msBox) : msBox,
       h('div', { class: 'lnav' }, h('div', { class: 'lnav-in' }, navItems.map(([sid, t]) => h('a', { href: '#/lesson/' + id + '/@' + sid, 'data-stage': STAGE(sid) }, h('i', null, STAGE(sid)), t)), coreBtn), h('div', { class: 'lnav-p' }, pb, pl)),
-      body,
+      h('div', { class: 'reading-layout' + (L.unit === 'u1' ? ' module-one-layout' : '') }, L.unit === 'u1' ? h('details', {class:'teacher-source tutor-only'}, h('summary',null,'Оригинал · справка для преподавателя'), source.el) : source.el, body),
       h('nav', { class: 'lfoot' }, prevNext(id)));
     onProg();
-    if (exId) setTimeout(() => { const t = exId.startsWith('@') ? document.getElementById('sec-' + exId.slice(1)) : document.getElementById('ex-' + exId); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); t.classList.add('flash'); setTimeout(() => t.classList.remove('flash'), 1500); } }, 60);
+    if (exId) setTimeout(() => { const t = exId.startsWith('@') ? document.getElementById('sec-' + exId.slice(1)) : document.getElementById('ex-' + exId); if (t) { t.scrollIntoView({ behavior: 'auto', block: 'start' }); t.classList.add('flash'); setTimeout(() => t.classList.remove('flash'), 1500); } }, 60);
     return page;
   }
   const STAGE = sid => sid === 'warm' ? 'Start' : sid === 'vocab' ? 'Learn' : sid === 'train' ? 'Train' : sid === 'oge' ? 'Apply' : /review/.test(sid) ? 'Review' : 'Practice';
@@ -298,6 +304,7 @@
   function TutorPage() {
     const list = Profiles.list(); const cur = Profiles.currentId(); const d = Store.data();
     const asks = []; UNIT.lessons.forEach(id => allItems(id).forEach(it => { const e = d.ex[it.id]; if (e && e.ask) asks.push([id, it, e.ask]); }));
+    AudioLib.list().then(have => document.querySelectorAll('[data-audio-track]').forEach(cell => { const track = cell.dataset.audioTrack; const nums = track.split(/[–-]/).map(Number); const wanted = nums.length === 2 ? Array.from({length: nums[1]-nums[0]+1},(_,i)=>String(nums[0]+i).padStart(2,'0')) : [track]; cell.textContent = wanted.every(t=>have.includes(t)) ? 'Подключено' : 'Выберите файл в Audio'; }));
     const audio = []; UNIT.lessons.forEach(id => allItems(id).forEach(it => { if (it.audio) audio.push([id, it]); }));
     return h('div', { class: 'page' }, h('div', { class: 'eyebrow' }, 'Tutor Mode'), h('h1', null, 'Tutor ', h('span', { class: 'hl-blue' }, 'desk')),
       h('div', { class: 'tcard' }, h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: Tutor.on() || null, onchange: async e => { if (e.target.checked && !(await Tutor.unlock())) { e.target.checked = false; return; } Tutor.set(e.target.checked); header(); } }), h('span', null, 'Режим преподавателя: заметки, ключи («Показать ключ»), чек-листы, комментарии')),
@@ -314,21 +321,32 @@
       h('div', { class: 'sec-h' }, h('h2', null, 'Questions from the student')),
       asks.length ? h('ul', { class: 'errlist' }, asks.map(([id, it, q]) => h('li', null, h('a', { href: '#/lesson/' + id + '/' + it.id }, lname(id) + ' · ' + (it.num ? 'Ex. ' + it.num : it.title)), h('span', null, q)))) : h('p', { class: 'muted' }, 'Вопросов пока нет (кнопка «Ask your tutor» под каждым заданием).'),
       h('div', { class: 'sec-h' }, h('h2', null, 'Audio status')),
-      h('div', { class: 'wtable-wrap' }, h('table', { class: 'wtable' }, h('thead', null, h('tr', null, ['Track', 'Exercise', 'File', 'Status'].map(t => h('th', null, t)))), h('tbody', null, audio.map(([id, it]) => h('tr', null, h('td', null, it.audio.track), h('td', null, lname(id) + ' Ex. ' + it.num + ' p.' + it.page), h('td', null, h('code', null, it.audio.file || 'audio/' + it.audio.track + '.mp3')), h('td', null, it.audio.file ? h('span', { class: 'pill mastered' }, 'connected') : h('span', { class: 'pill new' }, 'waiting'))))))),
-      h('p', { class: 'muted small' }, 'Как подключить: положите файл в папку audio/ и впишите путь в js/data-unit1.js → audio.file (например \'audio/03.mp3\'). Подробно — в README.md.'),
+      h('div', { class: 'wtable-wrap' }, h('table', { class: 'wtable' }, h('thead', null, h('tr', null, ['Track', 'Exercise', 'File', 'Status'].map(t => h('th', null, t)))), h('tbody', null, audio.map(([id, it]) => h('tr', null, h('td', null, it.audio.track), h('td', null, lname(id) + ' Ex. ' + it.num + ' p.' + it.page), h('td', null, h('code', null, it.audio.file || 'Локальная аудиотека')), h('td', { 'data-audio-track': it.audio.track }, 'Проверяем…')))))),
+      h('p', { class: 'muted small' }, 'Откройте «Материалы», чтобы подключить пакет страниц и аудио, или раздел Audio, чтобы выбрать свои MP3. Файлы сохраняются только в этом браузере.'),
       h('div', { class: 'sec-h' }, h('h2', null, 'Coverage')), h('a', { class: 'btn ghost', href: '#/coverage' }, 'Таблица соответствия учебнику →'));
   }
 
   function Coverage() {
-    const rows = []; UNIT.lessons.forEach(id => allItems(id).forEach(it => { if (it.source === 'added') return; rows.push([id, it]); }));
-    const how = it => { const t = it.type === 'listen' ? it.inner.type : it.type; return t === 'open' ? 'Преподаватель ✓/✗ по ключу' : ['discuss', 'rank', 'checklist'].includes(t) ? 'Устно / отметка' : t === 'writing' ? (it.min ? 'Формальные признаки + преподаватель' : 'Преподаватель') : t === 'scores' ? 'Самооценка' : t === 'reference' ? 'Отметка «прочитано»' : 'Автопроверка'; };
-    const typeName = { gaps: 'Gaps / select', listen: 'Audio/video + task', mcq: 'Choice', inline: 'Choose the alternative', underline: 'Tap to underline + tense', rulebox: 'Grammar box', match: 'Matching', order: 'Write the sentence', rank: 'Ranking 1–3', discuss: 'Speaking prompts', open: 'Open answers + key', tapfind: 'Tap to underline', multi: 'Tick all', checklist: 'Checklist', scores: 'Scores 0–10', reference: 'Read / listen box', writing: 'Writing', interview: 'Timed speaking' };
-    return h('div', { class: 'page' }, h('div', { class: 'eyebrow' }, 'Coverage'), h('h1', null, 'Учебник → сайт'),
-      h('p', { class: 'muted' }, 'Все задания модулей ' + BOOK.units.map(u => u.label || u.num).join(', ') + ' (Student Book, Grammar Practice, Workbook) в исходной нумерации: ' + rows.length + ' заданий. Добавленные материалы (warm-up, OGE, review) в таблицу не входят и на сайте помечены «Добавлено».'),
-      h('div', { class: 'wtable-wrap' }, h('table', { class: 'wtable' }, h('thead', null, h('tr', null, ['Page', 'Ex.', 'Site section', 'Format', 'Status', 'Check'].map(t => h('th', null, t)))),
-        h('tbody', null, rows.map(([id, it]) => h('tr', null, h('td', null, it.page), h('td', null, h('a', { href: '#/lesson/' + id + '/' + it.id }, it.num)), h('td', null, lname(id) + ' ' + LESSONS[id].title), h('td', null, typeName[it.type] || it.type), h('td', null, it.audio && !it.audio.file ? h('span', { class: 'pill difficult' }, 'ждёт аудио ' + it.audio.track) : h('span', { class: 'pill mastered' }, 'готово')), h('td', null, how(it))))))),
-      h('div', { class: 'sec-h' }, h('h2', null, 'Не извлечено / не предоставлено')),
-      h('ul', { class: 'pending' }, ['Аудио и видео (Student Book и Workbook) — плееры готовы, транскрипты из Teacher’s Guide уже подключены', 'Видео Grammar Animation, Culture video — не предоставлены', 'Фото учебника не переносятся: вместо них — оригинальные иллюстрации платформы (3D-объекты, рисунки, схемы) и описания', 'Следующие модули — по мере работы'].map(t => h('li', null, '⏳ ' + t))));
+    const status = h('p', { role: 'status' }, 'Проверяем подключённые страницы и треки…');
+    const tbody = h('tbody');
+    Promise.all([MaterialLib.list().catch(() => []), AudioLib.list()]).then(([pages, tracks]) => {
+      let total = 0, reviewed = 0;
+      for (const lesson of Object.values(LESSONS)) for (const sec of lesson.sections) for (const it of sec.items) {
+        if (it.source === 'added') continue;
+        total++; const review = (window.CONTENT_REVIEW || {})[it.id]; if (review) reviewed++;
+        const track = it.audio && it.audio.track;
+        const trackIds = !track ? [] : /^[0-9]+[–-][0-9]+$/.test(track) ? (() => { const [a,b] = track.split(/[–-]/).map(Number); return Array.from({length:b-a+1}, (_,i) => String(a+i).padStart(2,'0')); })() : [track];
+        tbody.append(h('tr', null,
+          h('td', null, it.page), h('td', null, h('a', { href: '#/lesson/' + lesson.id + '/' + it.id }, lesson.code + ' · Ex. ' + it.num)),
+          h('td', null, it.type), h('td', null, pages.includes(Number(it.page)) ? 'Подключена' : 'По вашей книге'),
+          h('td', null, trackIds.length ? trackIds.every(t => tracks.includes(t)) ? 'Подключено · ' + track : 'Нужно подключить · ' + track : '—'),
+          h('td', null, review || 'Полная сверка ключа ещё не завершена')));
+      }
+      status.textContent = total + ' карточек учебника. Для ' + reviewed + ' зафиксирована сверка ключа или структуры. Наличие карточки не означает, что упражнение полностью сверено.';
+    });
+    return h('div', {class:'page'}, h('div',{class:'eyebrow'},'Состояние курса'),h('h1',null,'Учебник → сайт'),status,
+      h('div',{class:'wtable-wrap'},h('table',{class:'wtable'},h('thead',null,h('tr',null,['Страница','Упражнение','Формат','Оригинал','Аудио','Сверка'].map(t=>h('th',null,t)))),tbody)),
+      h('p',{class:'muted'},'Открытые ответы и устные задания оценивает преподаватель. Оригиналы подключаются локально на странице «Материалы».'));
   }
   function NotFound() { return h('div', { class: 'page' }, h('h1', null, 'Page not found'), h('a', { class: 'btn primary', href: '#/' }, 'Home')); }
 
@@ -353,8 +371,12 @@
   /* ---------- router ---------- */
   let currentCleanup = null;
   function route() {
+    document.querySelectorAll('audio').forEach(a => a.pause());
+    document.querySelectorAll('.ex').forEach(c => { if (c._dispose) c._dispose(); });
+    if (window.AudioLib) AudioLib.clearListeners();
     if (currentCleanup) { currentCleanup(); currentCleanup = null; }
     const parts = (location.hash || '#/').slice(2).split('/').filter(Boolean).map(decodeURIComponent);
+    document.documentElement.classList.toggle('module-one-view', parts[0] === 'lesson' && !!LESSONS[parts[1]] && LESSONS[parts[1]].unit === 'u1');
     let view;
     switch (parts[0]) {
       case undefined: view = Home(); break;
@@ -364,6 +386,7 @@
       case 'progress': view = Progress(); break;
       case 'tutor': if (!Tutor.unlocked()) { Tutor.unlock().then(ok => { if (ok) route(); else if (location.hash === '#/tutor') location.hash = '#/'; }); view = h('div', { class: 'page' }, h('h1', null, 'Tutor Mode'), h('p', { class: 'muted' }, 'Введите код преподавателя.')); break; } view = TutorPage(); break;
       case 'audio': view = AudioPage(); break;
+      case 'materials': view = MaterialsPage(); break;
       case 'coverage': view = Coverage(); break;
       default: view = NotFound();
     }
@@ -374,8 +397,12 @@
   }
   window.addEventListener('hashchange', route);
   document.addEventListener('xp', () => { const c = document.querySelector('.xpchip'); if (!c) return; const L = Game.level(); c.querySelector('.xp-lv').textContent = 'Lv ' + L.i; c.querySelector('.xp-bar i').style.width = L.pct + '%'; c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); });
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('course-content-changed', route);
+  document.addEventListener('DOMContentLoaded', async () => {
+    try { LessonContent.apply(await MaterialLib.exercises()); } catch (e) { console.error('Local lesson content:', e); }
     Tutor.set(Tutor.on()); Board.set(Board.on());
+    if (Core.LS.get('visualVersion', 1) < 2) { Core.LS.set('quietView', false); Core.LS.set('visualVersion', 2); }
+    document.documentElement.classList.toggle('quiet-view', Core.LS.get('quietView', true));
     if (!Core.LS.ok()) document.getElementById('lsWarn').hidden = false;
     route();
   });

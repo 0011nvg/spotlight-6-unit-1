@@ -64,7 +64,7 @@
   function mood(m, ms) {
     build(); clearTimeout(moodT);
     root.className = 'keks mood-' + m + (root.classList.contains('typing') ? ' typing' : '');
-    emo.textContent = ({ happy: '😺', proud: '🏆', think: '🤔', cheer: '🎉', wink: '😉', sleep: '💤' })[m] || '';
+    emo.textContent = ({ listen: '🎧', happy: '😺', proud: '🏆', think: '🤔', cheer: '🎉', wink: '😉', sleep: '💤' })[m] || '';
     moodT = setTimeout(() => { root.classList.remove('mood-' + m); emo.textContent = ''; }, ms || 1800);
   }
   /* say(text, {mood, actions:[[label, fn, primary]], ttl, important}) */
@@ -162,15 +162,19 @@
         h('div', { class: 'row center' },
           VOCAB.some(v => v.lesson === lessonId) ? h('a', { class: 'btn ghost', href: '#/vocab/' + lessonId + '/guided', onclick: close }, 'Train lesson words') : null,
           errs.length ? h('a', { class: 'btn ghost', href: '#/lesson/' + lessonId + '/' + errs[0][1].id, onclick: close }, 'Fix mistakes') : null,
+          next ? h('button', {class:'btn ghost',onclick:close},'Остаться в уроке') : null,
           next ? h('a', { class: 'btn primary', href: '#/lesson/' + next, onclick: close }, 'Next lesson →') : h('button', { class: 'btn primary', onclick: close }, 'Close'))));
     document.body.appendChild(ov); document.addEventListener('keydown', esc);
     confetti(70);
   }
 
   /* ---------- reactions ---------- */
+  let greetingTimer; const listeningGreetings = new Set();
+  document.addEventListener('lesson-item-selected', e => { if (!e.detail.lesson.startsWith('u1') || !e.detail.listen || listeningGreetings.has(e.detail.lesson)) return; listeningGreetings.add(e.detail.lesson); clearTimeout(greetingTimer); greetingTimer = setTimeout(() => { if (location.hash.includes('/'+e.detail.lesson)) say(e.detail.listen ? 'Listen carefully! You can play it again.' : 'Ready? Let’s go! You’ve got this!', {mood:e.detail.listen?'listen':'happy',ttl:3500}); }, 400); });
   let perfectRun = 0, checks = 0;
   document.addEventListener('exercise-scored', e => {
     const d = e.detail; checks++;
+    if ((d.id || '').startsWith('u1')) { say(d.pct === 1 ? 'Great job! Amazing work!' : 'Let’s try again! You’ve got this!', {mood:d.pct===1?'happy':'think',ttl:3500}); return; }
     if (d.pct === 1) {
       perfectRun++;
       if (d.fixed) say(pick(LINES.fixed) + (d.xp ? ' +' + d.xp + ' XP' : ''), { mood: 'proud' });
@@ -191,12 +195,13 @@
     const d = e.detail; const g = Game.G(); const key = d.listen ? 'listen' : d.type;
     if (g.tips[key] || !(TIPS[d.type] || d.listen)) return;
     g.tips[key] = Date.now(); Store.save();
+    if ((d.id || '').startsWith('u1')) { mood(d.listen ? 'listen' : 'wink'); return; }
     say(d.listen ? LISTEN_TIP : TIPS[d.type], { title: 'Как это работает', mood: 'wink', ttl: 9000 });
   });
   document.addEventListener('xp', e => { if (e.detail.levelUp) { say('Level ' + e.detail.level.i + ': ' + e.detail.level.name + '!', { title: 'Level up! ⬆', mood: 'cheer', important: true }); confetti(50); } });
   document.addEventListener('mission-complete', e => { const m = e.detail.mission; say(m.icon + ' ' + m.title + ' — done! +' + m.xp + ' XP', { title: 'Mission complete', mood: 'proud' }); });
   document.addEventListener('badge', e => { const b = e.detail; say(b.desc, { title: b.icon + ' New badge: ' + b.name, mood: 'cheer', important: true, ttl: 6500 }); confetti(30); });
-  document.addEventListener('lesson-complete', e => setTimeout(() => celebrate(e.detail.lesson), 700));
+  document.addEventListener('lesson-complete', e => { const lesson = e.detail.lesson; setTimeout(() => { if (location.hash.startsWith('#/lesson/' + lesson)) celebrate(lesson); }, 700); });
   document.addEventListener('word-mastered', e => { if (Math.random() < .5) say(pick(LINES.mastered) + '“' + e.detail.w + '”', { mood: 'happy', ttl: 3500 }); });
 
   // приветствие на главной — один раз за сессию

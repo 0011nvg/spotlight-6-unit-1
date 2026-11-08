@@ -45,18 +45,21 @@
       const jobs = Array.from(files).map(f => {
         const t = trackOf(f.name);
         if (!t || !/audio|mpeg|mp3|m4a|wav|ogg/i.test(f.type + f.name)) { skip.push(f.name); return null; }
-        ok.push(t); delete urls[t];
+        ok.push(t); if (urls[t]) URL.revokeObjectURL(urls[t]); delete urls[t];
         return tx('readwrite', s => s.put(f, t));
       });
       return Promise.all(jobs).then(() => { listeners.forEach(fn => fn()); return { ok: ok.sort(), skip }; });
     },
     clear() { Object.keys(urls).forEach(k => { URL.revokeObjectURL(urls[k]); delete urls[k]; }); return tx('readwrite', s => s.clear()).then(() => listeners.forEach(fn => fn())); },
-    onChange(fn) { listeners.push(fn); },
+    clearListeners() { listeners.length = 0; },
+    onChange(fn) { listeners.push(fn); return () => { const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1); }; },
     pick() {
       return new Promise(res => {
         const i = document.createElement('input');
         i.type = 'file'; i.accept = 'audio/*,.mp3'; i.multiple = true;
-        i.onchange = () => AudioLib.add(i.files).then(res);
+        i.hidden = true; document.body.appendChild(i);
+        i.onchange = () => { const files = Array.from(i.files); i.remove(); AudioLib.add(files).then(res).catch(() => { Core.toast('Не удалось сохранить аудио. Проверьте свободное место и настройки браузера.', 'bad'); res({ ok: [], skip: [] }); }); };
+        i.oncancel = () => { i.remove(); res({ ok: [], skip: [] }); };
         i.click();
       });
     }

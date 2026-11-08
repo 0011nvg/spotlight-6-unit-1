@@ -48,6 +48,7 @@
 
   /* ---------- Answer checking ---------- */
   const CONTR = [
+    [/\b(he|she|it|that|there|what|where|who|how|mum|dad|friend)['’]s(?=\s+(?:not\s+)?got\b)/g, '$1 has'],
     [/\bwon['’]t\b/g, 'will not'], [/\bcan['’]t\b/g, 'cannot'], [/\bshan['’]t\b/g, 'shall not'],
     [/n['’]t\b/g, ' not'], [/['’]re\b/g, ' are'], [/['’]m\b/g, ' am'], [/['’]ve\b/g, ' have'], [/['’]ll\b/g, ' will'], [/['’]d\b/g, ' would'],
     [/\b(he|she|it|that|there|what|where|who|how|mum|dad|friend)['’]s\b/g, '$1 is']
@@ -64,7 +65,7 @@
     if (!opts.noContr) {
       t = ' ' + t;
       // subject-less short forms at the very start of a gap: "'re sitting" / "'m not"
-      t = t.replace(/^ '(re)\b/, ' are').replace(/^ '(m)\b/, ' am').replace(/^ '(s)\b/, ' is');
+      t = t.replace(/^ '(re)\b/, ' are').replace(/^ '(m)\b/, ' am').replace(/^ 's(?=\s+(?:not\s+)?got\b)/, ' has').replace(/^ '(s)\b/, ' ' + (opts.sMeaning || 'is'));
       CONTR.forEach(([re, rep]) => { t = t.replace(re, rep); });
       t = t.replace(/\bcannot\b/g, 'can not').replace(/\s+/g, ' ').trim();
     }
@@ -93,7 +94,7 @@
     const raw = norm(s, Object.assign({}, opts, { noContr: true }));
     const out = new Set([n]);
     const possessiveOnly = /^[a-z]+(['’]s|s['’])$/.test(raw); // «boy’s» в упражнении на притяжательный падеж ≠ «boy is»
-    const sOpts = possessiveOnly || !/'s\b/.test(raw) ? [null] : [null, ' is', ' has'];
+    const sOpts = possessiveOnly || !/'s\b/.test(raw) ? [null] : /'s\s+(?:not\s+)?got\b/.test(raw) ? [null, ' has'] : opts.sMeaning === 'has' ? [' has'] : [null, ' is'];
     const dOpts = /'d\b/.test(raw) ? [' would', ' had'] : [null];
     sOpts.forEach(sv => dOpts.forEach(dv => {
       let t = raw;
@@ -105,6 +106,7 @@
     return [...out];
   }
   function matches(input, accepted, opts) {
+    if (!(opts && (opts.strict || opts.noContr)) && (accepted || []).some(a => norm(a, {noContr:true}) === 'has') && !(accepted || []).some(a => norm(a, {noContr:true}) === 'is')) opts = Object.assign({}, opts, {sMeaning:'has'});
     const vi = new Set(variants(input, opts));
     if (!vi.size) return false;
     return (accepted || []).some(a => variants(a, opts).some(x => vi.has(x)));

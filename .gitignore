@@ -1,0 +1,5 @@
+# Original licensed material is kept outside the public source tree.
+*materials*.json
+private-materials/
+private-pages/
+dist/

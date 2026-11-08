@@ -1,0 +1,5 @@
+{
+  "name": "panoramic-a2-classroom",
+  "private": true,
+  "scripts": { "test": "node --test tests/classroom.test.cjs", "build": "node tools/build.cjs" }
+}
