@@ -400,6 +400,8 @@
   document.addEventListener('course-content-changed', route);
   document.addEventListener('DOMContentLoaded', async () => {
     try { LessonContent.apply(await MaterialLib.exercises()); } catch (e) { console.error('Local lesson content:', e); }
+    try { await MaterialLib.loadBuiltIn(); }
+    catch (e) { Core.toast('Материалы не загрузились. Проверьте интернет и обновите страницу.', 'bad'); }
     Tutor.set(Tutor.on()); Board.set(Board.on());
     if (Core.LS.get('visualVersion', 1) < 2) { Core.LS.set('quietView', false); Core.LS.set('visualVersion', 2); }
     document.documentElement.classList.toggle('quiet-view', Core.LS.get('quietView', true));

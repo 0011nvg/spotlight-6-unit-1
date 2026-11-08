@@ -1,4 +1,4 @@
-/* Private source pages live in IndexedDB, never in the published repository. */
+/* Built-in Module 1 materials load from the site; optional local imports remain supported. */
 (function () {
   'use strict';
   const { h, toast } = Core;
@@ -58,11 +58,20 @@
     });
     return { pages, audio, exercises };
   }
+  const builtInPages = [11,12,13,14,15,16,17,18,19,20,132,133,156,157,158,159,160,161];
   const MaterialLib = {
+    async loadBuiltIn() {
+      const response = await fetch('assets/module1/content.json?v=1');
+      if (!response.ok) throw new Error('Не удалось загрузить материалы Module 1');
+      LessonContent.apply(validate(await response.json()).exercises);
+    },
     validate,
     exercises() { return transaction('readonly', s => s.getAll(), 'exercises').then(v => v || []); },
-    get(page) { return transaction('readonly', s => s.get(Number(page))); },
-    list() { return transaction('readonly', s => s.getAllKeys()).then(v => v || []); },
+    get(page) {
+      if (builtInPages.includes(Number(page))) return fetch('assets/module1/page-' + Number(page) + '.jpg').then(r => { if (!r.ok) throw new Error('Страница недоступна'); return r.blob(); });
+      return transaction('readonly', s => s.get(Number(page)));
+    },
+    list() { return transaction('readonly', s => s.getAllKeys()).catch(() => []).then(v => [...new Set([...builtInPages,...(v || [])])]); },
     async import(file) {
       if (file.size > 350 * 1024 * 1024) throw new Error('Пакет больше 350 МБ');
       const { pages, audio, exercises } = validate(JSON.parse(await file.text()));
@@ -145,22 +154,12 @@
     } };
   }
   function MaterialsPage() {
-    const status = h('p', { role: 'status', 'aria-live': 'polite' }, 'Проверяем локальные файлы…');
-    const load = h('button', { class: 'btn primary', onclick: () => importMaterials(load).then(paint) }, 'Подключить пакет');
-    async function paint() {
-      try { const [pages, tracks] = await Promise.all([MaterialLib.list(), AudioLib.list()]); status.textContent = 'В этом браузере: ' + pages.length + ' страниц · ' + tracks.length + ' аудиотреков'; }
-      catch (_) { status.textContent = 'Локальное хранилище недоступно. Задания можно выполнять по книге.'; }
-    }
-    paint();
-    return h('div', { class: 'page materials-page' }, h('div', { class: 'eyebrow' }, 'Ваш учебный комплект'), h('h1', null, 'Материалы для занятия'),
-      h('p', { class: 'lead' }, 'Интерактивный Module 1: оригинальные тексты, отдельные иллюстрации и аудио внутри заданий.'),
-      h('section', { class: 'tcard' }, h('h2', null, 'Подключите один раз'), h('ol', null,
-        h('li', null, 'Выберите подготовленный файл panoramic-module1-materials.json.'),
-        h('li', null, 'Откройте Module 1: тексты и картинки появятся внутри заданий, а треки — в плеерах. Целые страницы доступны только преподавателю.'),
-        h('li', null, 'На другом устройстве или после очистки браузера подключите пакет заново.')),
-        h('p', null, 'Файлы остаются в этом браузере и не загружаются на сервер. Хранилище общее для профилей учеников на этом устройстве; ответы каждого ученика хранятся отдельно.'), status,
-        h('div', { class: 'row' }, load, h('a', { class: 'btn ghost', href: '#/audio' }, 'Подключить только MP3'), h('a', { class: 'btn ghost', href: '#/' }, 'К урокам')),
-        h('button', { class: 'btn ghost sm', onclick: async () => { if (await Core.confirmBox('Отключить страницы?', 'Удалятся только локальные копии страниц. Оригинальные файлы, аудио и ответы останутся.', 'Отключить')) { await MaterialLib.clear(); paint(); } } }, 'Отключить страницы')));
+    return h('div', {class:'page materials-page'}, h('div',{class:'eyebrow'},'Ваш учебный комплект'),
+      h('h1',null,'Материалы для занятия'),
+      h('section',{class:'tcard'},h('h2',null,'Module 1 подключён автоматически'),
+        h('p',null,'Тексты и иллюстрации загружаются вместе с сайтом. Все 13 оригинальных аудиозаписей доступны прямо в заданиях — выбирать и загружать файлы не нужно.'),
+        h('p',null,'Для загрузки материалов требуется интернет. Полные страницы доступны в свёрнутом справочнике Teacher Mode. Ответы сохраняются отдельно в этом браузере.'),
+        h('a',{class:'btn primary',href:'#/lesson/u1-1'},'Начать занятие')));
   }
   window.MaterialLib = MaterialLib; window.SourceReader = SourceReader; window.MaterialsPage = MaterialsPage;
 })();

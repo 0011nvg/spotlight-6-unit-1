@@ -36,10 +36,11 @@
     trackOf,
     get(track) {
       track = pad(track);
+      if (['01','02','03','04','05','06','07','08','09','89','90','91','92'].includes(track)) return Promise.resolve('assets/module1/track-' + track + '.mp3');
       if (urls[track]) return Promise.resolve(urls[track]);
       return tx('readonly', s => s.get(track)).then(b => { if (!b) return null; urls[track] = URL.createObjectURL(b); return urls[track]; }).catch(() => null);
     },
-    list() { return tx('readonly', s => s.getAllKeys()).then(k => (k || []).sort()).catch(() => []); },
+    list() { return tx('readonly', s => s.getAllKeys()).then(k => [...new Set([...(k || []),'01','02','03','04','05','06','07','08','09','89','90','91','92'])].sort()).catch(() => []); },
     add(files) {
       const ok = [], skip = [];
       const jobs = Array.from(files).map(f => {
