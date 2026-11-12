@@ -39,7 +39,7 @@ Units after Starter are not implemented in this version. Unit 1 (Fun times) is t
 - Source/data inspection: unique task IDs, expected exercise coverage and choice/answer consistency.
 - Browser checks on desktop: matching/incorrect/empty feedback, saved answers after reload, alternate contracted verb forms, the word-formation table, possessives and cloze fields.
 - All six audio files decode; browser metadata loads for S.01–S.06. No automated transcription was used to validate the recordings against keys.
-- Teacher-mode browser sign-in test was blocked by the action review system. It is not reported as completed.
+- Teacher-mode browser check completed with user approval: code 7350 opens answer keys and teaching notes; switching back to learner view removes all teacher keys from the page.
 - Mobile CSS is included; a physical-device check has not been performed.
 
 The original PDF and full original audio files remain outside the public source tree. Only assets used by Starter are included here.
