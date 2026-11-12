@@ -1,52 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Panoramic A2 · Interactive English Studio</title>
-<meta name="description" content="Interactive English studio for 1:1 lessons: textbook exercises with auto-check, vocabulary trainer with spaced repetition, OGE practice.">
-<!-- Учебные материалы для индивидуальных занятий: не индексировать -->
-<meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#F7F4ED">
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="assets/fonts/unbounded-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/fonts/manrope-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=c9c2ba5113">
-<link rel="stylesheet" href="css/play.css?v=6d64740018">
-<link rel="stylesheet" href="css/visual.css?v=9ef8f798a5">
-<link rel="stylesheet" href="css/classroom.css?v=f7e79eb310">
-<link rel="stylesheet" href="css/course.css?v=b88158bf11">
-</head>
-<body>
-<a class="skip" href="#main">Skip to content</a>
-<header id="hdr" class="hdr"></header>
-<div id="lsWarn" class="lswarn" hidden>Браузер не даёт сохранять данные (приватный режим?). Задания работают, но прогресс не сохранится после закрытия вкладки.</div>
-<main id="main" tabindex="-1"><p class="page" role="status">Загружаем урок и материалы…</p></main>
-<footer class="ftr">
-  <span>Interactive English Studio · для индивидуальных занятий</span>
-  <span class="muted">Задания учебника используются как учебный материал на занятиях. Прогресс хранится только в этом браузере.</span>
-</footer>
-<noscript><div class="lswarn">Для работы платформы включите JavaScript.</div></noscript>
-<script src="js/core.js?v=16521e4e40"></script>
-<script src="js/data-unit1.js?v=d7d73dbd2e"></script>
-<script src="js/data-unit2.js?v=d796fb2c65"></script>
-<script src="js/data-unit3.js?v=4e9c2e18c8"></script>
-<script src="js/data-corrections.js?v=06c45b97c1"></script>
-<script src="js/data-vocab.js?v=8328d65db6"></script>
-<script src="js/data-vocab23.js?v=4bba586962"></script>
-<script src="js/pics-map.js?v=516477ddc8"></script>
-<script src="js/data-visuals.js?v=78124c09d6"></script>
-<script src="js/pics.js?v=9019ad6b61"></script>
-<script src="js/visual-svg.js?v=ffb1f6aaae"></script>
-<script src="js/vocab.js?v=6d7fa496c0"></script>
-<script src="js/game.js?v=142672ff69"></script>
-<script src="js/audiolib.js?v=1ebf394300"></script>
-<script src="js/exercises.js?v=cd93b94969"></script>
-<script src="js/sentence-builder.js?v=8ea41b8c39"></script>
-<script src="js/keks.js?v=2b143dc9fa"></script>
-<script src="js/materials.js?v=90d3249788"></script>
-<script src="js/lesson-content.js?v=126f6e13a0"></script>
-<script src="js/lesson-workspace.js?v=fdabdac6fd"></script>
-<script src="js/app.js?v=918babe15b"></script>
-</body>
-</html>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173f64"><meta name="description" content="Optimise Stars A2: интерактивный Starter. Увлечения, чтение, грамматика и аудио S.01–S.06."><title>Starter · Optimise Stars A2</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173f64'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-size='44' fill='white'%3ES%3C/text%3E%3C/svg%3E"><link rel="stylesheet" href="style.css"></head>
+<body><a class="skip" href="#app">К заданиям</a><header class="topbar"><a class="brand" href="#lesson-0" aria-label="Optimise Stars A2, Starter"><span class="brand-icon">O<span>✦</span></span><span>OPTIMISE STARS <b>A2</b><small>YOUR ENGLISH WORKSPACE</small></span></a><button id="teacher-mode" class="quiet">Режим учителя</button></header>
+<div class="shell"><aside class="sidebar"><p class="eyebrow">STUDENT’S BOOK</p><h2>Let’s get started<span>.</span></h2><p class="muted">Увлечения, привычки<br>и немного грамматики.</p><nav id="lessons" aria-label="Разделы Starter"></nav><div class="course-next"><span>ДАЛЕЕ В КУРСЕ</span><p>01 · Fun times</p><small>Следующий этап</small></div><div class="progress-box"><span>Мой прогресс <b id="progress-label">0%</b></span><progress id="course-progress" max="100" value="0">0%</progress><small>Ответы сохраняются в этом браузере</small></div></aside><main id="app" tabindex="-1"></main></div>
+<footer><span>Optimise Stars A2 · Starter · pp. 6–9</span><button id="export-work" class="quiet">Скачать мои ответы</button></footer>
+<dialog id="source-dialog"><div class="dialog-top"><h2 id="dialog-title">Страница учебника</h2><button class="quiet" id="close-source" aria-label="Закрыть">Закрыть ×</button></div><img id="source-image" alt="Страница пособия Optimise Stars A2"></dialog>
+<dialog id="teacher-dialog"><form id="teacher-form"><h2>Режим учителя</h2><p>Ключи к заданиям и заметки для проведения урока.</p><label for="teacher-code">Код учителя</label><input id="teacher-code" type="password" inputmode="numeric" autocomplete="off" required><p id="code-error" role="alert"></p><div class="actions"><button type="button" id="cancel-teacher" class="secondary">Отмена</button><button type="submit">Войти</button></div></form></dialog>
+<noscript>Для интерактивных заданий включите JavaScript в браузере.</noscript><script src="content.js"></script><script src="app.js"></script></body></html>
