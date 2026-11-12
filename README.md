@@ -41,5 +41,6 @@ Units after Starter are not implemented in this version. Unit 1 (Fun times) is t
 - All six audio files decode; browser metadata loads for S.01–S.06. No automated transcription was used to validate the recordings against keys.
 - Teacher-mode browser check completed with user approval: code 7350 opens answer keys and teaching notes; switching back to learner view removes all teacher keys from the page.
 - Mobile CSS is included; a physical-device check has not been performed.
+- The Starter interface includes a bright yellow/pink/blue visual layer, the correct Keks mascot artwork, contextual Keks tips, a clickable “Ask Keks” helper, and short optional crystal missions on every page.
 
 The original PDF and full original audio files remain outside the public source tree. Only assets used by Starter are included here.
